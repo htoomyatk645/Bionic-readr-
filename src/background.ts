@@ -1,18 +1,18 @@
 import { getValue, setValue } from "~core/storage";
+import { resolveEffectiveSettings } from "~features/modes";
 import { DEFAULT_SETTINGS, SETTINGS_KEY } from "~features/settings/defaults";
 import type { ReaderSettings } from "~features/settings/types";
 
 async function ensureDefaults() {
   const existing = await getValue<ReaderSettings | null>(SETTINGS_KEY, null);
-  if (!existing) {
-    await setValue(SETTINGS_KEY, DEFAULT_SETTINGS);
-  }
+  if (!existing) await setValue(SETTINGS_KEY, DEFAULT_SETTINGS);
 }
 
 async function syncBadge(settings: ReaderSettings) {
   const c = (globalThis as unknown as { chrome?: typeof chrome }).chrome;
   if (!c?.action) return;
-  if (settings.bionic.enabled) {
+  const effective = resolveEffectiveSettings(settings);
+  if (effective.bionic.enabled) {
     await c.action.setBadgeText({ text: "" });
   } else {
     await c.action.setBadgeText({ text: "off" });
