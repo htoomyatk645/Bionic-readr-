@@ -28,6 +28,11 @@ export interface MemorySettings {
   showWarmup: boolean;
 }
 
+export interface AdaptiveSettings {
+  enabled: boolean;
+  frictionRelief: boolean;
+}
+
 export interface ModeOverride {
   bionic?: Partial<BionicSettings>;
   typography?: Partial<TypographySettings>;
@@ -45,6 +50,7 @@ export interface ReaderSettings {
   excludedHosts: string[];
   modes: ModesState;
   memory: MemorySettings;
+  adaptive: AdaptiveSettings;
 }
 
 export interface EffectiveSettings {

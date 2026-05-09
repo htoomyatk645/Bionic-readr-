@@ -23,7 +23,7 @@ export function Switch({ checked, onChange, label }: SwitchProps) {
     >
       <motion.span
         layout
-        transition={{ type: "spring", stiffness: 500, damping: 32 }}
+        transition={{ type: "spring", stiffness: 380, damping: 34, mass: 0.6 }}
         className={
           "inline-block h-[18px] w-[18px] rounded-full bg-white shadow-sm " +
           (checked ? "ml-[18px]" : "ml-[2px]")

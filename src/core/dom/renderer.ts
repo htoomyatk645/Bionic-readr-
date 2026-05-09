@@ -4,7 +4,7 @@ import type { BionicSettings, RadarSettings, SkimLayer } from "~features/setting
 import { applyRadar, clearRadar } from "~features/radar";
 import { applySkimLayer, clearSkim } from "~features/skim";
 import { discoverAndWrapBlocks, unwrapSentences, type DiscoveredBlock } from "./structure";
-import { revertAll, transformTextNode } from "./transformer";
+import { retransformAll, revertAll, transformTextNode } from "./transformer";
 import { collectTextNodes } from "./walker";
 
 const BATCH_SIZE = 80;
@@ -147,17 +147,25 @@ export function createRenderer(root: HTMLElement, initial: RendererInputs): Rend
     async update(next) {
       const prev = inputs;
       inputs = next;
-      const bionicChanged =
-        prev.bionic.enabled !== next.bionic.enabled ||
-        prev.bionic.intensity !== next.bionic.intensity ||
-        prev.bionic.fixationStrength !== next.bionic.fixationStrength;
+      const enabledChanged = prev.bionic.enabled !== next.bionic.enabled;
+      const emphasisChanged =
+        !enabledChanged &&
+        next.bionic.enabled &&
+        (prev.bionic.intensity !== next.bionic.intensity ||
+          prev.bionic.fixationStrength !== next.bionic.fixationStrength);
 
-      if (bionicChanged) {
+      if (enabledChanged) {
         revertAll(root);
         if (next.bionic.enabled) {
           const nodes = collectTextNodes(root);
           await transformBatch(nodes, next.bionic);
         }
+      } else if (emphasisChanged) {
+        retransformAll(root, {
+          intensity: next.bionic.intensity,
+          fixationStrength: next.bionic.fixationStrength,
+          preserveCase: true
+        });
       }
       await refreshOverlays();
     },

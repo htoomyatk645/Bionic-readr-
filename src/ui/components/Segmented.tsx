@@ -33,7 +33,7 @@ export function Segmented<T extends string>({ value, options, onChange }: Segmen
             {active && (
               <motion.span
                 layoutId={layoutId}
-                transition={{ type: "spring", stiffness: 500, damping: 38 }}
+                transition={{ type: "spring", stiffness: 360, damping: 38, mass: 0.7 }}
                 className="absolute inset-0 -z-10 rounded-[9px] bg-white dark:bg-ink-700 shadow-soft"
               />
             )}

@@ -3,6 +3,7 @@ import { getValue, onValueChanged, setValue } from "~core/storage";
 import { resolveEffectiveSettings } from "~features/modes";
 import { DEFAULT_SETTINGS, SETTINGS_KEY } from "./defaults";
 import type {
+  AdaptiveSettings,
   BionicSettings,
   EffectiveSettings,
   MemorySettings,
@@ -26,6 +27,7 @@ interface SettingsState {
   patchActiveRadar(patch: Partial<RadarSettings>): Promise<void>;
   setActiveSkimLayer(layer: SkimLayer): Promise<void>;
   patchMemory(patch: Partial<MemorySettings>): Promise<void>;
+  patchAdaptive(patch: Partial<AdaptiveSettings>): Promise<void>;
   toggleHostExcluded(host: string): Promise<void>;
   resetActiveMode(): Promise<void>;
   reset(): Promise<void>;
@@ -46,7 +48,8 @@ function mergeWithDefaults(stored: Partial<ReaderSettings> | null | undefined): 
         ...((stored.modes ?? {}).customizations ?? {})
       }
     },
-    memory: { ...DEFAULT_SETTINGS.memory, ...(stored.memory ?? {}) }
+    memory: { ...DEFAULT_SETTINGS.memory, ...(stored.memory ?? {}) },
+    adaptive: { ...DEFAULT_SETTINGS.adaptive, ...(stored.adaptive ?? {}) }
   };
 }
 
@@ -126,6 +129,15 @@ export const useSettings = create<SettingsState>((set, get) => {
       const next: ReaderSettings = {
         ...get().settings,
         memory: { ...get().settings.memory, ...patch }
+      };
+      set({ settings: next, effective: resolveEffectiveSettings(next) });
+      await persist(next);
+    },
+
+    async patchAdaptive(patch) {
+      const next: ReaderSettings = {
+        ...get().settings,
+        adaptive: { ...get().settings.adaptive, ...patch }
       };
       set({ settings: next, effective: resolveEffectiveSettings(next) });
       await persist(next);

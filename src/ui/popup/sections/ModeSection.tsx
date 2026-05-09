@@ -27,7 +27,7 @@ export function ModeSection() {
               {active && (
                 <motion.span
                   layoutId="mode-indicator"
-                  transition={{ type: "spring", stiffness: 480, damping: 36 }}
+                  transition={{ type: "spring", stiffness: 340, damping: 38, mass: 0.7 }}
                   className="absolute inset-0 -z-10 rounded-xl bg-ink-100/90 dark:bg-ink-800/80"
                 />
               )}

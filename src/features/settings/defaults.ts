@@ -10,6 +10,10 @@ export const DEFAULT_SETTINGS: ReaderSettings = {
   memory: {
     enabled: true,
     showWarmup: true
+  },
+  adaptive: {
+    enabled: true,
+    frictionRelief: true
   }
 };
 

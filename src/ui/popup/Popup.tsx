@@ -6,6 +6,7 @@ import { ReadingSection } from "./sections/ReadingSection";
 import { SkimSection } from "./sections/SkimSection";
 import { RadarSection } from "./sections/RadarSection";
 import { TypographySection } from "./sections/TypographySection";
+import { AdaptiveSection } from "./sections/AdaptiveSection";
 import { MemorySection } from "./sections/MemorySection";
 import { SiteSection } from "./sections/SiteSection";
 import { useSettings } from "~features/settings/store";
@@ -49,6 +50,7 @@ export function Popup() {
         <SkimSection />
         <RadarSection />
         <TypographySection />
+        <AdaptiveSection />
         <MemorySection />
         <SiteSection />
       </div>
