@@ -5,13 +5,25 @@ import {
   clearRelief,
   createBehaviorEngine,
   NEUTRAL_OVERLAY,
+  type AdaptiveOverlay,
   type AppliedAdaptation,
   type BehaviorEngineHandle,
-  type BehaviorSnapshot,
+  type BehaviorTickContext,
   type FrictionMap,
   type ReliefTarget
 } from "~core/behavior";
 import { createRenderer, type RendererHandle } from "~core/dom/renderer";
+import {
+  createLearningEngine,
+  predictiveTrust,
+  type CognitiveQueryContext,
+  type LearningEngineHandle
+} from "~core/learning";
+import {
+  composeOverlays,
+  createPredictionEngine,
+  type PredictionEngine
+} from "~core/prediction";
 import { getValue, onValueChanged } from "~core/storage";
 import { resolveEffectiveSettings } from "~features/modes";
 import { startTracker, type TrackerHandle } from "~features/memory";
@@ -28,9 +40,13 @@ export const config: PlasmoCSConfig = {
 let renderer: RendererHandle | null = null;
 let tracker: TrackerHandle | null = null;
 let engine: BehaviorEngineHandle | null = null;
+let learning: LearningEngineHandle | null = null;
+let prediction: PredictionEngine = createPredictionEngine();
+
 let lastSettings: ReaderSettings | null = null;
 let lastEffective: EffectiveSettings | null = null;
 let lastAdaptation: AppliedAdaptation | null = null;
+let lastComposedOverlay: AdaptiveOverlay = NEUTRAL_OVERLAY;
 let lastExcluded = false;
 
 function isExcluded(settings: ReaderSettings): boolean {
@@ -83,6 +99,37 @@ async function pushAdaptationToRenderer(
   });
 }
 
+function buildCognitiveContext(): CognitiveQueryContext | null {
+  if (!learning) return null;
+  const view = learning.view();
+  return { cognitive: view.cognitive, emotional: view.emotional, patterns: view.patterns };
+}
+
+function handleTick(ctx: BehaviorTickContext): void {
+  prediction.ingest(ctx.snapshot);
+  if (learning) {
+    learning.ingestBehaviorSnapshot(ctx.snapshot);
+    if (engine) learning.noteActiveTime(engine.current().activeMs);
+  }
+
+  if (!ctx.significant || !lastEffective) return;
+
+  const cognitiveCtx = buildCognitiveContext();
+  let composed: AdaptiveOverlay = ctx.reactiveOverlay;
+
+  if (cognitiveCtx) {
+    const { signal, overlay: predictive } = prediction.overlay(ctx.snapshot, cognitiveCtx);
+    const trust = predictiveTrust(cognitiveCtx, cognitiveCtx.cognitive.observedSessions);
+    const effectiveTrust = Math.min(signal.confidence.combined, trust);
+    composed = composeOverlays(ctx.reactiveOverlay, predictive, effectiveTrust);
+  }
+
+  lastComposedOverlay = composed;
+  const adaptation = applyOverlay(lastEffective, composed);
+  lastAdaptation = adaptation;
+  void pushAdaptationToRenderer(lastEffective, adaptation);
+}
+
 function startBehaviorEngine(settings: ReaderSettings) {
   if (engine) return;
   if (!settings.adaptive.enabled) return;
@@ -90,11 +137,8 @@ function startBehaviorEngine(settings: ReaderSettings) {
   engine = createBehaviorEngine({
     getBlocks: () => discoveredAsBlocks(),
     getEffective: () => lastEffective ?? resolveEffectiveSettings(settings),
-    onAdaptation: (adaptation: AppliedAdaptation, _snapshot: BehaviorSnapshot) => {
-      void _snapshot;
-      lastAdaptation = adaptation;
-      if (lastEffective) void pushAdaptationToRenderer(lastEffective, adaptation);
-    },
+    onTick: handleTick,
+    onSignalEvent: (event) => learning?.ingestSignalEvent(event),
     onFrictionChange: (friction: FrictionMap) => {
       if (!lastSettings?.adaptive.frictionRelief) return;
       applyRelief(discoveredAsReliefTargets(), friction);
@@ -110,13 +154,26 @@ async function stopBehaviorEngine() {
   clearRelief();
 }
 
-function startAll(settings: ReaderSettings, effective: EffectiveSettings) {
+async function startLearning() {
+  if (learning) return;
+  learning = await createLearningEngine();
+}
+
+async function stopLearning() {
+  if (!learning) return;
+  const handle = learning;
+  learning = null;
+  await handle.stop();
+}
+
+async function startAll(settings: ReaderSettings, effective: EffectiveSettings) {
   applyPageStyles(true);
   if (renderer) renderer.revert();
   if (!document.body) return;
 
   const adaptation = adaptationFromEffective(effective);
   lastAdaptation = adaptation;
+  lastComposedOverlay = NEUTRAL_OVERLAY;
   updateAdaptiveVariables(adaptation);
 
   renderer = createRenderer(document.body, {
@@ -135,11 +192,14 @@ function startAll(settings: ReaderSettings, effective: EffectiveSettings) {
     });
   }
 
+  prediction = createPredictionEngine();
+  await startLearning();
   startBehaviorEngine(settings);
 }
 
 async function stopAll() {
   await stopBehaviorEngine();
+  await stopLearning();
   if (renderer) {
     renderer.revert();
     renderer = null;
@@ -151,6 +211,7 @@ async function stopAll() {
   }
   removePageStyles();
   lastAdaptation = null;
+  lastComposedOverlay = NEUTRAL_OVERLAY;
 }
 
 async function apply(settings: ReaderSettings) {
@@ -171,7 +232,7 @@ async function apply(settings: ReaderSettings) {
     lastSettings = settings;
     lastEffective = effective;
     lastExcluded = false;
-    startAll(settings, effective);
+    await startAll(settings, effective);
     return;
   }
 
@@ -188,8 +249,7 @@ async function apply(settings: ReaderSettings) {
   lastSettings = settings;
   lastEffective = effective;
 
-  const overlay =
-    settings.adaptive.enabled && engine ? engine.current().overlay ?? NEUTRAL_OVERLAY : NEUTRAL_OVERLAY;
+  const overlay = settings.adaptive.enabled ? lastComposedOverlay : NEUTRAL_OVERLAY;
   const adaptation = applyOverlay(effective, overlay);
   lastAdaptation = adaptation;
 
@@ -221,5 +281,9 @@ async function apply(settings: ReaderSettings) {
       memory: { ...DEFAULT_SETTINGS.memory, ...(next.memory ?? {}) },
       adaptive: { ...DEFAULT_SETTINGS.adaptive, ...(next.adaptive ?? {}) }
     });
+  });
+
+  window.addEventListener("pagehide", () => {
+    void learning?.flush();
   });
 })();

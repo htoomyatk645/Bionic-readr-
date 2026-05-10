@@ -1,5 +1,5 @@
 import type { EffectiveSettings } from "~features/settings/types";
-import { applyOverlay, computeOverlay } from "./adaptation/overlay";
+import { computeOverlay } from "./adaptation/overlay";
 import { FrictionTracker } from "./friction/tracker";
 import { BehaviorModel } from "./modeling/snapshot";
 import { DEFAULT_PROFILE, type PersonalizationProfile } from "./personalization/profile";
@@ -20,18 +20,26 @@ import {
 } from "./signals";
 import type {
   AdaptiveOverlay,
-  AppliedAdaptation,
   BehaviorSnapshot,
-  FrictionMap
+  FrictionMap,
+  SignalEvent
 } from "./types";
 
 const SNAPSHOT_TICK_MS = 2_000;
 const SIGNIFICANT_DELTA = 0.06;
 
+export interface BehaviorTickContext {
+  snapshot: BehaviorSnapshot;
+  reactiveOverlay: AdaptiveOverlay;
+  profile: PersonalizationProfile;
+  significant: boolean;
+}
+
 export interface BehaviorEngineInputs {
   getBlocks(): { blockId: string; element: HTMLElement }[];
   getEffective(): EffectiveSettings;
-  onAdaptation(adaptation: AppliedAdaptation, snapshot: BehaviorSnapshot): void;
+  onTick(ctx: BehaviorTickContext): void;
+  onSignalEvent?(event: SignalEvent): void;
   onFrictionChange(friction: FrictionMap): void;
 }
 
@@ -43,6 +51,7 @@ export interface BehaviorEngineHandle {
     overlay: AdaptiveOverlay | null;
     profile: PersonalizationProfile;
     friction: FrictionMap;
+    activeMs: number;
   };
 }
 
@@ -81,6 +90,7 @@ export function createBehaviorEngine(inputs: BehaviorEngineInputs): BehaviorEngi
     if (event.kind === "user-active" || event.kind === "scroll") isActive = true;
     if (event.kind === "user-idle" || event.kind === "tab-hidden") isActive = false;
     if (event.kind === "tab-visible") isActive = true;
+    inputs.onSignalEvent?.(event);
   });
 
   const unsubscribeFriction = friction.subscribe((map) => {
@@ -107,17 +117,19 @@ export function createBehaviorEngine(inputs: BehaviorEngineInputs): BehaviorEngi
     refreshAttachments();
     session = tickSession(session, isActive);
     const snapshot = model.snapshot();
-    if (!isSignificant(lastSnapshot, snapshot)) return;
-    lastSnapshot = snapshot;
+    const significant = isSignificant(lastSnapshot, snapshot);
 
     const base = inputs.getEffective();
-    const overlay = computeOverlay(snapshot, profile, base);
-    lastOverlay = overlay;
-    const adaptation = applyOverlay(base, overlay);
-    inputs.onAdaptation(adaptation, snapshot);
+    const reactiveOverlay = computeOverlay(snapshot, profile, base);
 
-    profile = updateProfile(profile, snapshot);
-    void writeProfile(profile);
+    if (significant) {
+      lastSnapshot = snapshot;
+      lastOverlay = reactiveOverlay;
+      profile = updateProfile(profile, snapshot);
+      void writeProfile(profile);
+    }
+
+    inputs.onTick({ snapshot, reactiveOverlay, profile, significant });
   };
 
   const interval = window.setInterval(tick, SNAPSHOT_TICK_MS);
@@ -151,7 +163,8 @@ export function createBehaviorEngine(inputs: BehaviorEngineInputs): BehaviorEngi
         snapshot: lastSnapshot,
         overlay: lastOverlay,
         profile,
-        friction: friction.current()
+        friction: friction.current(),
+        activeMs: session.totalActiveMs
       };
     }
   };
