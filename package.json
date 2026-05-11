@@ -29,6 +29,12 @@
     "tailwindcss": "^3.4.6",
     "typescript": "5.4.5"
   },
+  "overrides": {
+    "sharp": "^0.34.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "manifest": {
     "name": "Bionic Redr — Attention optimizer",
     "host_permissions": [
