@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nico+Moji&display=swap");
+
 @layer base {
   html, body {
     font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
@@ -12,6 +14,11 @@
   body {
     margin: 0;
   }
+}
+
+.font-display {
+  font-family: "Nico Moji", "Inter", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.04em;
 }
 
 @layer components {

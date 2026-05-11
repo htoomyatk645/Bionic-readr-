@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   mode: "jit",
-  darkMode: "media",
+  darkMode: "class",
   content: ["./src/**/*.{tsx,ts,html}"],
   theme: {
     extend: {
@@ -15,7 +15,14 @@ module.exports = {
           "Segoe UI",
           "sans-serif"
         ],
-        serif: ["ui-serif", "Charter", "Iowan Old Style", "Georgia", "serif"]
+        serif: ["ui-serif", "Charter", "Iowan Old Style", "Georgia", "serif"],
+        display: [
+          "\"Nico Moji\"",
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "sans-serif"
+        ]
       },
       colors: {
         ink: {
@@ -31,8 +38,9 @@ module.exports = {
           900: "#131316"
         },
         accent: {
-          DEFAULT: "#6b7cff",
-          soft: "#eef0ff"
+          DEFAULT: "#1DA7C6",
+          soft: "#0a3640",
+          dim: "#1a8aa5"
         }
       },
       boxShadow: {

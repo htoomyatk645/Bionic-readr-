@@ -41,6 +41,15 @@
     ],
     "action": {
       "default_title": "Bionic Redr"
+    },
+    "commands": {
+      "toggle-sidebar": {
+        "suggested_key": {
+          "default": "Ctrl+Shift+B",
+          "mac": "Command+Shift+B"
+        },
+        "description": "Open Bionic Redr sidebar"
+      }
     }
   }
 }
