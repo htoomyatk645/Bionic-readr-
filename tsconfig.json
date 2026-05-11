@@ -20,8 +20,9 @@
     "baseUrl": ".",
     "paths": {
       "~*": ["./src/*"]
-    }
+    },
+    "types": ["chrome", "node"]
   },
-  "include": ["src", ".plasmo/**/*.ts"],
+  "include": ["src", "scripts/**/*"],
   "exclude": ["node_modules", "build", "dist"]
 }

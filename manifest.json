@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Bionic Redr — Attention optimizer",
+  "short_name": "Bionic Redr",
+  "version": "0.1.0",
+  "description": "Attention optimization software for the information age. Reduces cognitive friction while reading the web.",
+  "action": {
+    "default_title": "Bionic Redr"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contents/bionic.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contents/sidebar.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["contents/warmup.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "commands": {
+    "toggle-sidebar": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+B",
+        "mac": "Command+Shift+B"
+      },
+      "description": "Open Bionic Redr sidebar"
+    }
+  }
+}

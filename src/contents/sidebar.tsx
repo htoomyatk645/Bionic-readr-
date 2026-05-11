@@ -1,45 +1,22 @@
-import cssText from "data-text:./style.css";
-import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo";
 import { useEffect, useState } from "react";
+import { createRoot } from "react-dom/client";
 import { Sidebar } from "~ui/sidebar/Sidebar";
 
-export const config: PlasmoCSConfig = {
-  matches: ["<all_urls>"],
-  all_frames: false,
-  run_at: "document_idle"
-};
-
-export const getStyle: PlasmoGetStyle = () => {
-  const style = document.createElement("style");
-  style.textContent = `
-    :host {
-      all: initial;
-      position: fixed;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: 0;
-      height: 100vh;
-      z-index: 2147483646;
-      pointer-events: none;
-    }
-    ${cssText}
-  `;
-  return style;
-};
+declare const __SIDEBAR_CSS__: string;
 
 const TOGGLE_MESSAGE_TYPE = "bionic-redr.toggle-sidebar";
 const CLOSE_MESSAGE_TYPE = "bionic-redr.close-sidebar";
+const HOST_ID = "bionic-redr-sidebar-host";
 const LOG = "[bionic-redr/sidebar]";
 
-export default function SidebarRoot() {
+function SidebarRoot() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     console.info(LOG, "mounted on", window.location.hostname);
     const c = (globalThis as unknown as { chrome?: typeof chrome }).chrome;
     if (!c?.runtime?.onMessage) {
-      console.warn(LOG, "chrome.runtime.onMessage unavailable — extension API not exposed");
+      console.warn(LOG, "chrome.runtime.onMessage unavailable");
       return;
     }
 
@@ -49,7 +26,6 @@ export default function SidebarRoot() {
       sendResponse: (response: unknown) => void
     ) => {
       if (!message || typeof message !== "object") return false;
-      console.debug(LOG, "received message", message);
       if (message.type === TOGGLE_MESSAGE_TYPE) {
         setOpen((v) => !v);
         sendResponse({ ok: true });
@@ -66,14 +42,14 @@ export default function SidebarRoot() {
     try {
       c.runtime.onMessage.addListener(handler);
     } catch (err) {
-      console.warn(LOG, "failed to register message listener", err);
+      console.warn(LOG, "listener register failed", err);
     }
 
     return () => {
       try {
         c.runtime.onMessage.removeListener(handler);
       } catch {
-        /* extension context invalidated — ignore */
+        /* context invalidated */
       }
     };
   }, []);
@@ -84,7 +60,6 @@ export default function SidebarRoot() {
       if (meta && e.shiftKey && (e.key === "B" || e.key === "b" || e.code === "KeyB")) {
         e.preventDefault();
         e.stopPropagation();
-        console.info(LOG, "shortcut Ctrl/Cmd+Shift+B");
         setOpen((v) => !v);
       }
     };
@@ -93,4 +68,30 @@ export default function SidebarRoot() {
   }, []);
 
   return <Sidebar open={open} onClose={() => setOpen(false)} />;
+}
+
+function mount() {
+  if (document.getElementById(HOST_ID)) return;
+  const host = document.createElement("div");
+  host.id = HOST_ID;
+  host.style.cssText =
+    "position:fixed;top:0;right:0;bottom:0;width:0;height:100vh;z-index:2147483646;pointer-events:none;";
+  document.documentElement.appendChild(host);
+
+  const shadow = host.attachShadow({ mode: "open" });
+  const style = document.createElement("style");
+  style.textContent = __SIDEBAR_CSS__;
+  shadow.appendChild(style);
+
+  const mountPoint = document.createElement("div");
+  mountPoint.style.cssText = "all: initial; pointer-events: none;";
+  shadow.appendChild(mountPoint);
+
+  createRoot(mountPoint).render(<SidebarRoot />);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", mount, { once: true });
+} else {
+  mount();
 }

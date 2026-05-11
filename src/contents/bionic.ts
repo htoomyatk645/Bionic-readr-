@@ -1,4 +1,3 @@
-import type { PlasmoCSConfig } from "plasmo";
 import {
   applyOverlay,
   applyRelief,
@@ -30,12 +29,6 @@ import { startTracker, type TrackerHandle } from "~features/memory";
 import { DEFAULT_SETTINGS, SETTINGS_KEY } from "~features/settings/defaults";
 import type { EffectiveSettings, ReaderSettings } from "~features/settings/types";
 import { applyPageStyles, removePageStyles, updateAdaptiveVariables } from "./pageStyles";
-
-export const config: PlasmoCSConfig = {
-  matches: ["<all_urls>"],
-  all_frames: false,
-  run_at: "document_idle"
-};
 
 const LOG = "[bionic-redr/engine]";
 console.info(LOG, "loaded on", window.location.hostname);
