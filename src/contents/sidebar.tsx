@@ -1,4 +1,4 @@
-import cssText from "data-text:~style.css";
+import cssText from "data-text:./style.css";
 import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo";
 import { useEffect, useState } from "react";
 import { Sidebar } from "~ui/sidebar/Sidebar";
