@@ -1,6 +1,12 @@
 import { useEffect } from "react";
 import { Preview } from "~ui/components/Preview";
 import { ModeSection } from "./sections/ModeSection";
+import { ReadingSection } from "./sections/ReadingSection";
+import { SkimSection } from "./sections/SkimSection";
+import { RadarSection } from "./sections/RadarSection";
+import { TypographySection } from "./sections/TypographySection";
+import { AdaptiveSection } from "./sections/AdaptiveSection";
+import { MemorySection } from "./sections/MemorySection";
 import { SiteSection } from "./sections/SiteSection";
 import { useSettings } from "~features/settings/store";
 
@@ -13,17 +19,20 @@ export function PopupBody() {
   }, [hydrate]);
 
   return (
-    <div className="font-sans pb-4">
+    <div className="font-sans">
       <ModeSection />
 
-      <div className="px-5 pt-5">
-        <div className="text-[10.5px] uppercase tracking-[0.08em] mb-2" style={{ color: "#6c6c76" }}>
-          Preview
-        </div>
+      <div className="px-5 pt-4">
         <Preview settings={effective.bionic} />
       </div>
 
-      <div className="pt-4">
+      <div className="mt-2">
+        <ReadingSection />
+        <SkimSection />
+        <RadarSection />
+        <TypographySection />
+        <AdaptiveSection />
+        <MemorySection />
         <SiteSection />
       </div>
     </div>
