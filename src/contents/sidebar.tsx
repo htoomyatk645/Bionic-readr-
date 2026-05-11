@@ -11,40 +11,64 @@ export const config: PlasmoCSConfig = {
 
 export const getStyle: PlasmoGetStyle = () => {
   const style = document.createElement("style");
-  style.textContent = cssText;
+  style.textContent = `
+    :host {
+      all: initial;
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 0;
+      height: 100vh;
+      z-index: 2147483646;
+      pointer-events: none;
+    }
+    ${cssText}
+  `;
   return style;
 };
 
 const TOGGLE_MESSAGE_TYPE = "bionic-redr.toggle-sidebar";
 const CLOSE_MESSAGE_TYPE = "bionic-redr.close-sidebar";
+const LOG = "[bionic-redr/sidebar]";
 
 export default function SidebarRoot() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    console.info(LOG, "mounted on", window.location.hostname);
     const c = (globalThis as unknown as { chrome?: typeof chrome }).chrome;
-    if (!c?.runtime?.onMessage) return;
+    if (!c?.runtime?.onMessage) {
+      console.warn(LOG, "chrome.runtime.onMessage unavailable — extension API not exposed");
+      return;
+    }
 
     const handler = (
       message: { type?: string } | null,
       _sender: chrome.runtime.MessageSender,
       sendResponse: (response: unknown) => void
     ) => {
-      if (!message) return false;
+      if (!message || typeof message !== "object") return false;
+      console.debug(LOG, "received message", message);
       if (message.type === TOGGLE_MESSAGE_TYPE) {
         setOpen((v) => !v);
         sendResponse({ ok: true });
-        return true;
+        return false;
       }
       if (message.type === CLOSE_MESSAGE_TYPE) {
         setOpen(false);
         sendResponse({ ok: true });
-        return true;
+        return false;
       }
       return false;
     };
 
-    c.runtime.onMessage.addListener(handler);
+    try {
+      c.runtime.onMessage.addListener(handler);
+    } catch (err) {
+      console.warn(LOG, "failed to register message listener", err);
+    }
+
     return () => {
       try {
         c.runtime.onMessage.removeListener(handler);
@@ -57,8 +81,10 @@ export default function SidebarRoot() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const meta = e.ctrlKey || e.metaKey;
-      if (meta && e.shiftKey && (e.key === "B" || e.key === "b")) {
+      if (meta && e.shiftKey && (e.key === "B" || e.key === "b" || e.code === "KeyB")) {
         e.preventDefault();
+        e.stopPropagation();
+        console.info(LOG, "shortcut Ctrl/Cmd+Shift+B");
         setOpen((v) => !v);
       }
     };

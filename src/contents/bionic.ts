@@ -37,6 +37,9 @@ export const config: PlasmoCSConfig = {
   run_at: "document_idle"
 };
 
+const LOG = "[bionic-redr/engine]";
+console.info(LOG, "loaded on", window.location.hostname);
+
 let renderer: RendererHandle | null = null;
 let tracker: TrackerHandle | null = null;
 let engine: BehaviorEngineHandle | null = null;
@@ -264,26 +267,32 @@ async function apply(settings: ReaderSettings) {
 }
 
 (async function init() {
-  const stored = await getValue<ReaderSettings>(SETTINGS_KEY, DEFAULT_SETTINGS);
-  const settings: ReaderSettings = {
-    ...DEFAULT_SETTINGS,
-    ...stored,
-    memory: { ...DEFAULT_SETTINGS.memory, ...(stored.memory ?? {}) },
-    adaptive: { ...DEFAULT_SETTINGS.adaptive, ...(stored.adaptive ?? {}) }
-  };
-  await apply(settings);
-
-  onValueChanged<ReaderSettings>(SETTINGS_KEY, (next) => {
-    if (!next) return;
-    void apply({
+  try {
+    const stored = await getValue<ReaderSettings>(SETTINGS_KEY, DEFAULT_SETTINGS);
+    const settings: ReaderSettings = {
       ...DEFAULT_SETTINGS,
-      ...next,
-      memory: { ...DEFAULT_SETTINGS.memory, ...(next.memory ?? {}) },
-      adaptive: { ...DEFAULT_SETTINGS.adaptive, ...(next.adaptive ?? {}) }
-    });
-  });
+      ...stored,
+      memory: { ...DEFAULT_SETTINGS.memory, ...(stored.memory ?? {}) },
+      adaptive: { ...DEFAULT_SETTINGS.adaptive, ...(stored.adaptive ?? {}) }
+    };
+    console.info(LOG, "init", { excluded: isExcluded(settings), mode: settings.modes.current });
+    await apply(settings);
+    console.info(LOG, "renderer ready");
 
-  window.addEventListener("pagehide", () => {
-    void learning?.flush();
-  });
+    onValueChanged<ReaderSettings>(SETTINGS_KEY, (next) => {
+      if (!next) return;
+      void apply({
+        ...DEFAULT_SETTINGS,
+        ...next,
+        memory: { ...DEFAULT_SETTINGS.memory, ...(next.memory ?? {}) },
+        adaptive: { ...DEFAULT_SETTINGS.adaptive, ...(next.adaptive ?? {}) }
+      });
+    });
+
+    window.addEventListener("pagehide", () => {
+      void learning?.flush();
+    });
+  } catch (err) {
+    console.error(LOG, "init failed", err);
+  }
 })();

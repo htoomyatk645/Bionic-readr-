@@ -4,6 +4,7 @@ import { PopupBody } from "~ui/popup/Popup";
 import { useSettings } from "~features/settings/store";
 
 const PANEL_WIDTH = 475;
+const LOG = "[bionic-redr/sidebar-ui]";
 
 interface SidebarProps {
   open: boolean;
@@ -16,6 +17,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
 
   useEffect(() => {
     if (!open) return;
+    console.info(LOG, "open");
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
@@ -28,32 +30,41 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       {open && (
         <motion.aside
           key="sidebar"
-          initial={{ x: PANEL_WIDTH }}
-          animate={{ x: 0 }}
-          exit={{ x: PANEL_WIDTH }}
+          initial={{ x: PANEL_WIDTH, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: PANEL_WIDTH, opacity: 0 }}
           transition={{ type: "spring", stiffness: 320, damping: 36, mass: 0.7 }}
           className="bionic-redr-sidebar dark"
           style={{
-            position: "fixed",
+            position: "absolute",
             top: 0,
             right: 0,
-            width: PANEL_WIDTH,
+            width: `${PANEL_WIDTH}px`,
             height: "100vh",
-            zIndex: 2147483646,
             display: "flex",
             flexDirection: "column",
             background: "#131316",
             color: "#eeeef0",
-            boxShadow: "-24px 0 64px rgba(0,0,0,0.32), -4px 0 12px rgba(0,0,0,0.18)",
-            borderLeft: "1px solid rgba(255,255,255,0.06)"
+            boxShadow:
+              "-24px 0 64px rgba(0,0,0,0.32), -4px 0 12px rgba(0,0,0,0.18)",
+            borderLeft: "1px solid rgba(255,255,255,0.06)",
+            pointerEvents: "auto",
+            fontFamily:
+              '"Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif'
           }}
         >
           <header className="px-5 pt-5 pb-3 flex items-center justify-between shrink-0">
             <div>
-              <div className="font-display text-[18px] text-ink-50 leading-none">
-                Bionic <span className="text-accent">Redr</span>
+              <div
+                className="font-display text-[18px] leading-none"
+                style={{ color: "#eeeef0" }}
+              >
+                Bionic <span style={{ color: "#1DA7C6" }}>Redr</span>
               </div>
-              <div className="text-[11px] text-ink-400 mt-1.5 tracking-wide">
+              <div
+                className="text-[11px] mt-1.5 tracking-wide"
+                style={{ color: "#8e8e98" }}
+              >
                 Attention optimizer · {hydrated ? "ready" : "…"}
               </div>
             </div>
@@ -61,7 +72,16 @@ export function Sidebar({ open, onClose }: SidebarProps) {
               type="button"
               onClick={onClose}
               aria-label="Close sidebar"
-              className="w-8 h-8 rounded-full grid place-items-center text-ink-400 hover:text-ink-50 hover:bg-ink-800/80 transition-colors"
+              className="w-8 h-8 rounded-full grid place-items-center transition-colors"
+              style={{ color: "#8e8e98", background: "transparent", border: "none", cursor: "pointer" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(255,255,255,0.06)";
+                e.currentTarget.style.color = "#eeeef0";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "#8e8e98";
+              }}
             >
               <CloseIcon />
             </button>
@@ -71,7 +91,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
             <PopupBody />
           </div>
 
-          <footer className="px-5 py-3 flex items-center justify-between text-[11px] text-ink-400 border-t border-ink-800/80 shrink-0">
+          <footer
+            className="px-5 py-3 flex items-center justify-between text-[11px] shrink-0"
+            style={{ color: "#8e8e98", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+          >
             <span>v0.4 · Phase 4</span>
             <button
               type="button"
@@ -79,7 +102,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 void resetActiveMode();
                 onClose();
               }}
-              className="hover:text-ink-100 transition-colors"
+              style={{ color: "#8e8e98", background: "transparent", border: "none", cursor: "pointer" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#eeeef0")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#8e8e98")}
             >
               Reset & close
             </button>
