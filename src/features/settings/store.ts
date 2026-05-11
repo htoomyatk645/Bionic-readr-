@@ -97,10 +97,12 @@ export const useSettings = create<SettingsState>((set, get) => {
     },
 
     async setMode(mode) {
+      const current = get().settings;
       const next: ReaderSettings = {
-        ...get().settings,
-        modes: { ...get().settings.modes, current: mode }
+        ...current,
+        modes: { current: mode, customizations: {} }
       };
+      console.info("[bionic-redr/store] setMode", mode);
       set({ settings: next, effective: resolveEffectiveSettings(next) });
       await persist(next);
     },

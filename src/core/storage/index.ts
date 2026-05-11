@@ -1,9 +1,11 @@
 type Listener<T> = (next: T) => void;
 
+const WRITE_DEBOUNCE_MS = 80;
+const LOG = "[bionic-redr/storage]";
+
 function area() {
   const c = (globalThis as unknown as { chrome?: typeof chrome }).chrome;
   try {
-    if (c?.storage?.sync) return c.storage.sync;
     if (c?.storage?.local) return c.storage.local;
   } catch {
     /* extension context invalidated — fall through */
@@ -26,23 +28,62 @@ export async function getValue<T>(key: string, fallback: T): Promise<T> {
     return (value as T | undefined) ?? fallback;
   } catch (err) {
     if (!isContextInvalidated(err)) {
-      // unexpected — log for diagnostics but still return fallback
-      console.debug?.("[bionic-redr] storage.get failed", err);
+      console.warn(LOG, "get failed", err);
     }
     return fallback;
   }
 }
 
-export async function setValue<T>(key: string, value: T): Promise<void> {
+interface PendingWrite {
+  value: unknown;
+  timer: number;
+  resolvers: Array<() => void>;
+}
+
+const pending = new Map<string, PendingWrite>();
+
+async function flushKey(key: string): Promise<void> {
+  const entry = pending.get(key);
+  if (!entry) return;
+  pending.delete(key);
   const a = area();
-  if (!a) return;
-  try {
-    await a.set({ [key]: value });
-  } catch (err) {
-    if (!isContextInvalidated(err)) {
-      console.debug?.("[bionic-redr] storage.set failed", err);
+  if (a) {
+    try {
+      await a.set({ [key]: entry.value });
+    } catch (err) {
+      if (!isContextInvalidated(err)) {
+        console.warn(LOG, "set failed for", key, err);
+      }
     }
   }
+  for (const resolve of entry.resolvers) resolve();
+}
+
+export function setValue<T>(key: string, value: T): Promise<void> {
+  return new Promise((resolve) => {
+    const existing = pending.get(key);
+    if (existing) {
+      clearTimeout(existing.timer);
+      existing.value = value;
+      existing.resolvers.push(resolve);
+      existing.timer = setTimeout(() => {
+        void flushKey(key);
+      }, WRITE_DEBOUNCE_MS) as unknown as number;
+      return;
+    }
+    const entry: PendingWrite = {
+      value,
+      resolvers: [resolve],
+      timer: setTimeout(() => {
+        void flushKey(key);
+      }, WRITE_DEBOUNCE_MS) as unknown as number
+    };
+    pending.set(key, entry);
+  });
+}
+
+export async function flushPendingWrites(): Promise<void> {
+  await Promise.all(Array.from(pending.keys()).map(flushKey));
 }
 
 export function onValueChanged<T>(key: string, listener: Listener<T>): () => void {
@@ -53,7 +94,7 @@ export function onValueChanged<T>(key: string, listener: Listener<T>): () => voi
       try {
         listener(changes[key].newValue as T);
       } catch (err) {
-        console.debug?.("[bionic-redr] storage listener threw", err);
+        console.warn(LOG, "listener threw", err);
       }
     }
   };

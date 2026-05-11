@@ -243,10 +243,17 @@ async function apply(settings: ReaderSettings) {
     lastSettings?.adaptive.enabled !== settings.adaptive.enabled;
   const reliefToggleChanged =
     lastSettings?.adaptive.frictionRelief !== settings.adaptive.frictionRelief;
+  const modeChanged =
+    (lastSettings?.modes.current ?? null) !== settings.modes.current;
 
   if (deepEqual(lastEffective, effective) && !adaptiveToggleChanged && !reliefToggleChanged) {
     lastSettings = settings;
     return;
+  }
+
+  if (modeChanged) {
+    console.info(LOG, "mode ->", settings.modes.current);
+    lastComposedOverlay = NEUTRAL_OVERLAY;
   }
 
   lastSettings = settings;
