@@ -27,8 +27,8 @@ This builds the extension and creates `release/bionic-redr-<version>.zip`. The z
 - **Description:** use the features list from the README.
 - **Category:** Accessibility (or Productivity).
 - **Icon:** `icons/icon-128.png`.
-- **Screenshots:** at least one, 1280×800 or 640×400. `docs/screenshot-light.png` and `docs/screenshot-dark.png` are 1280×860, so crop them to 1280×800 first.
-- **Small promo tile (440×280):** optional but recommended.
+- **Screenshots:** at least one, 1280×800 or 640×400. Ready-made 1280×800 screenshots are in `docs/store/`.
+- **Small promo tile (440×280):** `docs/store/promo-small-440x280.png`.
 
 **Privacy tab**
 
