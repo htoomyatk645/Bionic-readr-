@@ -13,6 +13,7 @@
   <a href="https://github.com/htoomyatk645/Bionic-readr-/actions/workflows/ci.yml"><img src="https://github.com/htoomyatk645/Bionic-readr-/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <img src="https://img.shields.io/badge/Chrome-Manifest%20V3-0B7F99" alt="Manifest V3">
   <img src="https://img.shields.io/badge/version-0.2.0-0B7F99" alt="Version 0.2.0">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0B7F99" alt="MIT license"></a>
 </p>
 
 <p align="center">
@@ -109,3 +110,7 @@ Built with TypeScript, React, Tailwind CSS, Zustand and esbuild.
 ## Contributing
 
 Issues and pull requests are welcome. Please run `npm run typecheck` and `npm run build` before opening a pull request.
+
+## License
+
+[MIT](LICENSE)
