@@ -6,7 +6,6 @@ import type { ReaderSettings } from "~features/settings/types";
 const TOGGLE_MESSAGE = { type: "bionic-redr.toggle-sidebar" } as const;
 const LOG = "[bionic-redr/bg]";
 
-console.info(LOG, "service worker boot");
 
 async function ensureDefaults() {
   const existing = await getValue<ReaderSettings | null>(SETTINGS_KEY, null);
@@ -21,7 +20,7 @@ async function syncBadge(settings: ReaderSettings) {
     await c.action.setBadgeText({ text: "" });
   } else {
     await c.action.setBadgeText({ text: "off" });
-    await c.action.setBadgeBackgroundColor({ color: "#6c6c76" });
+    await c.action.setBadgeBackgroundColor({ color: "#5c5c63" });
   }
 }
 
@@ -31,21 +30,28 @@ async function toggleActiveTab() {
     console.warn(LOG, "no active tab");
     return;
   }
-  console.info(LOG, "toggle ->", tab.id, tab.url);
   try {
+    await chrome.tabs.sendMessage(tab.id, TOGGLE_MESSAGE);
+    return;
+  } catch {
+    // Tabs opened before install/update have no content scripts yet. Inject
+    // them on demand, then open the panel.
+  }
+  if (!tab.url || !/^(https?|file):/.test(tab.url)) {
+    console.info(LOG, "cannot run on", tab.url);
+    return;
+  }
+  try {
+    const files = (chrome.runtime.getManifest().content_scripts ?? []).flatMap((c) => c.js ?? []);
+    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files });
     await chrome.tabs.sendMessage(tab.id, TOGGLE_MESSAGE);
   } catch (err) {
     const message = (err as { message?: string } | undefined)?.message ?? String(err);
-    console.warn(
-      LOG,
-      "sendMessage failed (no content script on this page?):",
-      message
-    );
+    console.warn(LOG, "inject failed:", message);
   }
 }
 
 chrome.runtime.onInstalled.addListener(async () => {
-  console.info(LOG, "onInstalled");
   await ensureDefaults();
   // Defensive: make sure no popup is registered (would block action.onClicked).
   try {
@@ -58,7 +64,6 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 chrome.runtime.onStartup?.addListener?.(async () => {
-  console.info(LOG, "onStartup");
   try {
     await chrome.action.setPopup({ popup: "" });
   } catch {
@@ -69,12 +74,10 @@ chrome.runtime.onStartup?.addListener?.(async () => {
 });
 
 chrome.action.onClicked.addListener(() => {
-  console.info(LOG, "action.onClicked");
   void toggleActiveTab();
 });
 
 chrome.commands?.onCommand.addListener?.((command) => {
-  console.info(LOG, "command", command);
   if (command === "toggle-sidebar" || command === "_execute_action") {
     void toggleActiveTab();
   }

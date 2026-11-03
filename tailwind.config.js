@@ -1,55 +1,28 @@
 /** @type {import('tailwindcss').Config} */
+const token = (name) => `rgb(var(--br-${name}) / <alpha-value>)`;
+
 module.exports = {
-  mode: "jit",
-  darkMode: "class",
   content: ["./src/**/*.{tsx,ts,html}"],
+  // The panel lives in a shadow root; Preflight's html/body rules are harmless
+  // but its element resets are what keep host-page styles from leaking in.
   theme: {
     extend: {
-      fontFamily: {
-        sans: [
-          "Inter",
-          "ui-sans-serif",
-          "system-ui",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Segoe UI",
-          "sans-serif"
-        ],
-        serif: ["ui-serif", "Charter", "Iowan Old Style", "Georgia", "serif"],
-        display: [
-          "\"Nico Moji\"",
-          "Inter",
-          "ui-sans-serif",
-          "system-ui",
-          "sans-serif"
-        ]
-      },
       colors: {
-        ink: {
-          50: "#f7f7f8",
-          100: "#eeeef0",
-          200: "#d9d9de",
-          300: "#b8b8c0",
-          400: "#8e8e98",
-          500: "#6c6c76",
-          600: "#4d4d56",
-          700: "#36363d",
-          800: "#222227",
-          900: "#131316"
-        },
-        accent: {
-          DEFAULT: "#1DA7C6",
-          soft: "#0a3640",
-          dim: "#1a8aa5"
-        }
+        bg: token("bg"),
+        surface: token("surface"),
+        "surface-2": token("surface-2"),
+        line: token("line"),
+        fg: token("fg"),
+        "fg-muted": token("fg-muted"),
+        "fg-subtle": token("fg-subtle"),
+        accent: token("accent"),
+        "accent-fg": token("accent-fg"),
+        "accent-soft": token("accent-soft"),
+        danger: token("danger")
       },
       boxShadow: {
-        soft: "0 1px 2px rgba(15,15,20,0.04), 0 8px 24px rgba(15,15,20,0.06)",
-        ring: "0 0 0 1px rgba(15,15,20,0.06)"
-      },
-      borderRadius: {
-        xl: "0.875rem",
-        "2xl": "1.125rem"
+        card: "var(--br-shadow)",
+        panel: "var(--br-panel-shadow)"
       }
     }
   },

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { getValue, onValueChanged, setValue } from "~core/storage";
 import { resolveEffectiveSettings } from "~features/modes";
-import { DEFAULT_SETTINGS, SETTINGS_KEY } from "./defaults";
+import { DEFAULT_SETTINGS, SETTINGS_KEY, normalizeSettings } from "./defaults";
 import type {
   AdaptiveSettings,
   BionicSettings,
@@ -12,6 +12,7 @@ import type {
   RadarSettings,
   ReaderSettings,
   SkimLayer,
+  Theme,
   TypographySettings
 } from "./types";
 
@@ -21,6 +22,7 @@ interface SettingsState {
   hydrated: boolean;
   hydrate(): Promise<void>;
   setMode(mode: ModeId): Promise<void>;
+  setTheme(theme: Theme): Promise<void>;
   patchMode(mode: ModeId, patch: ModeOverride): Promise<void>;
   patchActiveBionic(patch: Partial<BionicSettings>): Promise<void>;
   patchActiveTypography(patch: Partial<TypographySettings>): Promise<void>;
@@ -35,26 +37,18 @@ interface SettingsState {
 
 let unsubscribe: (() => void) | null = null;
 
-function mergeWithDefaults(stored: Partial<ReaderSettings> | null | undefined): ReaderSettings {
-  if (!stored) return DEFAULT_SETTINGS;
-  return {
-    ...DEFAULT_SETTINGS,
-    ...stored,
-    modes: {
-      ...DEFAULT_SETTINGS.modes,
-      ...(stored.modes ?? {}),
-      customizations: {
-        ...DEFAULT_SETTINGS.modes.customizations,
-        ...((stored.modes ?? {}).customizations ?? {})
-      }
-    },
-    memory: { ...DEFAULT_SETTINGS.memory, ...(stored.memory ?? {}) },
-    adaptive: { ...DEFAULT_SETTINGS.adaptive, ...(stored.adaptive ?? {}) }
-  };
-}
+// Writes are debounced; while one is in flight, storage.onChanged can echo an
+// *older* value back at us (e.g. mid slider-drag) and snap the UI backwards.
+// Ignore change events until our own writes have settled.
+let inflightWrites = 0;
 
 async function persist(next: ReaderSettings) {
-  await setValue(SETTINGS_KEY, next);
+  inflightWrites++;
+  try {
+    await setValue(SETTINGS_KEY, next);
+  } finally {
+    inflightWrites--;
+  }
 }
 
 export const useSettings = create<SettingsState>((set, get) => {
@@ -86,12 +80,12 @@ export const useSettings = create<SettingsState>((set, get) => {
 
     async hydrate() {
       const stored = await getValue<ReaderSettings | null>(SETTINGS_KEY, null);
-      const merged = mergeWithDefaults(stored);
+      const merged = normalizeSettings(stored);
       set({ settings: merged, effective: resolveEffectiveSettings(merged), hydrated: true });
       if (unsubscribe) unsubscribe();
       unsubscribe = onValueChanged<ReaderSettings>(SETTINGS_KEY, (next) => {
-        if (!next) return;
-        const remerged = mergeWithDefaults(next);
+        if (!next || inflightWrites > 0) return;
+        const remerged = normalizeSettings(next);
         set({ settings: remerged, effective: resolveEffectiveSettings(remerged) });
       });
     },
@@ -100,9 +94,15 @@ export const useSettings = create<SettingsState>((set, get) => {
       const current = get().settings;
       const next: ReaderSettings = {
         ...current,
-        modes: { current: mode, customizations: {} }
+        // Keep each mode's own tweaks; switching modes is non-destructive.
+        modes: { ...current.modes, current: mode }
       };
-      console.info("[bionic-redr/store] setMode", mode);
+      set({ settings: next, effective: resolveEffectiveSettings(next) });
+      await persist(next);
+    },
+
+    async setTheme(theme) {
+      const next: ReaderSettings = { ...get().settings, theme };
       set({ settings: next, effective: resolveEffectiveSettings(next) });
       await persist(next);
     },

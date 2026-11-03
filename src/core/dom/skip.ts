@@ -38,9 +38,7 @@ export function shouldSkipElement(el: Element): boolean {
   if (aria === "true") return true;
 
   if (el.classList.contains("bionic-redr-skip")) return true;
-  if (el.closest("[data-bionic-redr-managed]") && !el.hasAttribute("data-bionic-redr-managed"))
-    return false;
-
+  if (el.id === "bionic-redr-sidebar-host" || el.id === "bionic-redr-warmup-host") return true;
   return false;
 }
 

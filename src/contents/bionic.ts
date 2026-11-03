@@ -26,12 +26,16 @@ import {
 import { getValue, onValueChanged } from "~core/storage";
 import { resolveEffectiveSettings } from "~features/modes";
 import { startTracker, type TrackerHandle } from "~features/memory";
-import { DEFAULT_SETTINGS, SETTINGS_KEY } from "~features/settings/defaults";
+import {
+  DEFAULT_SETTINGS,
+  SETTINGS_KEY,
+  isHostExcluded,
+  normalizeSettings
+} from "~features/settings/defaults";
 import type { EffectiveSettings, ReaderSettings } from "~features/settings/types";
 import { applyPageStyles, removePageStyles, updateAdaptiveVariables } from "./pageStyles";
 
 const LOG = "[bionic-redr/engine]";
-console.info(LOG, "loaded on", window.location.hostname);
 
 let renderer: RendererHandle | null = null;
 let tracker: TrackerHandle | null = null;
@@ -41,13 +45,11 @@ let prediction: PredictionEngine = createPredictionEngine();
 
 let lastSettings: ReaderSettings | null = null;
 let lastEffective: EffectiveSettings | null = null;
-let lastAdaptation: AppliedAdaptation | null = null;
 let lastComposedOverlay: AdaptiveOverlay = NEUTRAL_OVERLAY;
 let lastExcluded = false;
 
 function isExcluded(settings: ReaderSettings): boolean {
-  const host = window.location.hostname;
-  return settings.excludedHosts.some((h) => host === h || host.endsWith(`.${h}`));
+  return isHostExcluded(settings, window.location.hostname);
 }
 
 function deepEqual<T>(a: T | null, b: T): boolean {
@@ -122,7 +124,6 @@ function handleTick(ctx: BehaviorTickContext): void {
 
   lastComposedOverlay = composed;
   const adaptation = applyOverlay(lastEffective, composed);
-  lastAdaptation = adaptation;
   void pushAdaptationToRenderer(lastEffective, adaptation);
 }
 
@@ -168,7 +169,6 @@ async function startAll(settings: ReaderSettings, effective: EffectiveSettings) 
   if (!document.body) return;
 
   const adaptation = adaptationFromEffective(effective);
-  lastAdaptation = adaptation;
   lastComposedOverlay = NEUTRAL_OVERLAY;
   updateAdaptiveVariables(adaptation);
 
@@ -182,11 +182,7 @@ async function startAll(settings: ReaderSettings, effective: EffectiveSettings) 
     skimLayer: adaptation.skimLayer
   });
 
-  if (!tracker) {
-    tracker = startTracker({
-      getDiscoveredBlocks: () => renderer?.getDiscoveredBlocks() ?? []
-    });
-  }
+  syncTracker(settings);
 
   prediction = createPredictionEngine();
   await startLearning();
@@ -206,8 +202,18 @@ async function stopAll() {
     tracker = null;
   }
   removePageStyles();
-  lastAdaptation = null;
   lastComposedOverlay = NEUTRAL_OVERLAY;
+}
+
+function syncTracker(settings: ReaderSettings) {
+  if (settings.memory.enabled && !tracker) {
+    tracker = startTracker({
+      getDiscoveredBlocks: () => renderer?.getDiscoveredBlocks() ?? []
+    });
+  } else if (!settings.memory.enabled && tracker) {
+    tracker.stop();
+    tracker = null;
+  }
 }
 
 async function apply(settings: ReaderSettings) {
@@ -232,6 +238,8 @@ async function apply(settings: ReaderSettings) {
     return;
   }
 
+  syncTracker(settings);
+
   const adaptiveToggleChanged =
     lastSettings?.adaptive.enabled !== settings.adaptive.enabled;
   const reliefToggleChanged =
@@ -245,7 +253,6 @@ async function apply(settings: ReaderSettings) {
   }
 
   if (modeChanged) {
-    console.info(LOG, "mode ->", settings.modes.current);
     lastComposedOverlay = NEUTRAL_OVERLAY;
   }
 
@@ -254,7 +261,6 @@ async function apply(settings: ReaderSettings) {
 
   const overlay = settings.adaptive.enabled ? lastComposedOverlay : NEUTRAL_OVERLAY;
   const adaptation = applyOverlay(effective, overlay);
-  lastAdaptation = adaptation;
 
   await pushAdaptationToRenderer(effective, adaptation);
   engine?.noteEffectiveSettingsChanged();
@@ -267,26 +273,18 @@ async function apply(settings: ReaderSettings) {
 }
 
 (async function init() {
+  // Guard against double execution when the background re-injects scripts.
+  const w = window as unknown as { __bionicRedrEngine?: boolean };
+  if (w.__bionicRedrEngine) return;
+  w.__bionicRedrEngine = true;
   try {
     const stored = await getValue<ReaderSettings>(SETTINGS_KEY, DEFAULT_SETTINGS);
-    const settings: ReaderSettings = {
-      ...DEFAULT_SETTINGS,
-      ...stored,
-      memory: { ...DEFAULT_SETTINGS.memory, ...(stored.memory ?? {}) },
-      adaptive: { ...DEFAULT_SETTINGS.adaptive, ...(stored.adaptive ?? {}) }
-    };
-    console.info(LOG, "init", { excluded: isExcluded(settings), mode: settings.modes.current });
+    const settings = normalizeSettings(stored);
     await apply(settings);
-    console.info(LOG, "renderer ready");
 
     onValueChanged<ReaderSettings>(SETTINGS_KEY, (next) => {
       if (!next) return;
-      void apply({
-        ...DEFAULT_SETTINGS,
-        ...next,
-        memory: { ...DEFAULT_SETTINGS.memory, ...(next.memory ?? {}) },
-        adaptive: { ...DEFAULT_SETTINGS.adaptive, ...(next.adaptive ?? {}) }
-      });
+      void apply(normalizeSettings(next));
     });
 
     window.addEventListener("pagehide", () => {

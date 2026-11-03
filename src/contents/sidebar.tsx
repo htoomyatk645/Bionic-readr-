@@ -13,7 +13,6 @@ function SidebarRoot() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    console.info(LOG, "mounted on", window.location.hostname);
     const c = (globalThis as unknown as { chrome?: typeof chrome }).chrome;
     if (!c?.runtime?.onMessage) {
       console.warn(LOG, "chrome.runtime.onMessage unavailable");
@@ -57,7 +56,8 @@ function SidebarRoot() {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const meta = e.ctrlKey || e.metaKey;
-      if (meta && e.shiftKey && (e.key === "B" || e.key === "b" || e.code === "KeyB")) {
+      // Fallback for when Chrome didn't bind the command shortcut (conflicts).
+      if (meta && e.shiftKey && !e.altKey && e.code === "KeyB") {
         e.preventDefault();
         e.stopPropagation();
         setOpen((v) => !v);
@@ -70,8 +70,28 @@ function SidebarRoot() {
   return <Sidebar open={open} onClose={() => setOpen(false)} />;
 }
 
+const FONT_STYLE_ID = "bionic-redr-font";
+
+// @font-face rules are ignored inside shadow roots, so the panel's bundled font
+// is registered on the document under a private family name that can't clash
+// with anything the page uses.
+function registerFont() {
+  if (document.getElementById(FONT_STYLE_ID)) return;
+  let url: string;
+  try {
+    url = chrome.runtime.getURL("fonts/inter-latin-wght-normal.woff2");
+  } catch {
+    return;
+  }
+  const style = document.createElement("style");
+  style.id = FONT_STYLE_ID;
+  style.textContent = `@font-face{font-family:"Bionic Redr Inter";font-style:normal;font-display:swap;font-weight:100 900;src:url("${url}") format("woff2-variations");}`;
+  (document.head ?? document.documentElement).appendChild(style);
+}
+
 function mount() {
   if (document.getElementById(HOST_ID)) return;
+  registerFont();
   const host = document.createElement("div");
   host.id = HOST_ID;
   host.style.cssText =
@@ -85,6 +105,8 @@ function mount() {
 
   const mountPoint = document.createElement("div");
   mountPoint.style.cssText = "all: initial; pointer-events: none;";
+  // Keep host-page inherited styles (font-size, color, direction…) out.
+  style.textContent += ":host{all:initial;}";
   shadow.appendChild(mountPoint);
 
   createRoot(mountPoint).render(<SidebarRoot />);
