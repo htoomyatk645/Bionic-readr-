@@ -97,12 +97,17 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         >
           <header className="flex shrink-0 items-center justify-between gap-3 px-4 pb-3 pt-4">
             <div className="flex items-center gap-2.5">
-              <span
-                aria-hidden
-                className="flex h-8 w-8 items-center justify-center whitespace-nowrap rounded-[9px] bg-accent text-[14px] font-extrabold leading-none tracking-tight text-accent-fg"
-              >
-                B<span className="font-medium opacity-80">r</span>
-              </span>
+              <svg aria-hidden width="32" height="32" viewBox="0 0 128 128" className="shrink-0">
+                <rect width="128" height="128" rx="28" fill="rgb(var(--br-accent))" />
+                <g fill="rgb(var(--br-accent-fg))">
+                  <rect x="24" y="35" width="32" height="13" rx="6.5" />
+                  <rect x="62" y="38.5" width="42" height="6" rx="3" fillOpacity="0.55" />
+                  <rect x="24" y="57.5" width="22" height="13" rx="6.5" />
+                  <rect x="52" y="61" width="52" height="6" rx="3" fillOpacity="0.55" />
+                  <rect x="24" y="80" width="40" height="13" rx="6.5" />
+                  <rect x="70" y="83.5" width="22" height="6" rx="3" fillOpacity="0.55" />
+                </g>
+              </svg>
               <div>
                 <div className="text-[14px] font-semibold leading-tight text-fg">
                   <b>Bio</b>nic <b>Re</b>dr

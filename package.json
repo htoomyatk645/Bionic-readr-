@@ -2,14 +2,15 @@
   "name": "bionic-redr",
   "displayName": "Bionic Redr",
   "version": "0.2.0",
-  "description": "Attention optimization software for the information age. Reduces cognitive friction while reading the web.",
+  "description": "A Chrome extension that makes web pages easier to read: bionic word anchors, focus aids, typography and reading memory.",
   "author": "Bionic Redr",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
     "dev": "node scripts/build.mjs --watch",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "package": "node scripts/package.mjs"
   },
   "dependencies": {
     "framer-motion": "^11.3.19",
@@ -33,5 +34,9 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/htoomyatk645/Bionic-readr-.git"
   }
 }
