@@ -1,82 +1,91 @@
-const DB_NAME = "bionic-redr";
-const DB_VERSION = 1;
-const STORE = "sessions";
+// Reading-position memory lives in the extension's own chrome.storage.local,
+// never in the host page's IndexedDB (which the page itself could read and
+// which would scatter our data across every origin the user visits).
 
-let dbPromise: Promise<IDBDatabase> | null = null;
+const PREFIX = "bionic-redr.memory.v1:";
+const MAX_RECORDS = 400;
 
-function openDb(): Promise<IDBDatabase> {
-  if (dbPromise) return dbPromise;
-  dbPromise = new Promise((resolve, reject) => {
-    if (typeof indexedDB === "undefined") {
-      reject(new Error("IndexedDB unavailable"));
-      return;
-    }
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const db = req.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        const store = db.createObjectStore(STORE, { keyPath: "url" });
-        store.createIndex("hostname", "hostname", { unique: false });
-        store.createIndex("lastVisitAt", "lastVisitAt", { unique: false });
-      }
-    };
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-  return dbPromise;
-}
-
-function tx(db: IDBDatabase, mode: IDBTransactionMode): IDBObjectStore {
-  return db.transaction(STORE, mode).objectStore(STORE);
-}
-
-export async function readRecord<T>(key: string): Promise<T | null> {
+function area(): chrome.storage.LocalStorageArea | null {
   try {
-    const db = await openDb();
-    return await new Promise<T | null>((resolve, reject) => {
-      const r = tx(db, "readonly").get(key);
-      r.onsuccess = () => resolve((r.result as T | undefined) ?? null);
-      r.onerror = () => reject(r.error);
-    });
+    const c = (globalThis as unknown as { chrome?: typeof chrome }).chrome;
+    return c?.storage?.local ?? null;
   } catch {
     return null;
   }
 }
 
-export async function writeRecord<T>(value: T): Promise<void> {
+export async function readRecord<T>(key: string): Promise<T | null> {
+  const a = area();
+  if (!a) return null;
   try {
-    const db = await openDb();
-    await new Promise<void>((resolve, reject) => {
-      const r = tx(db, "readwrite").put(value);
-      r.onsuccess = () => resolve();
-      r.onerror = () => reject(r.error);
-    });
+    const k = PREFIX + key;
+    const result = await a.get(k);
+    return (result?.[k] as T | undefined) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function writeRecord<T extends { url: string }>(value: T): Promise<void> {
+  const a = area();
+  if (!a) return;
+  try {
+    await a.set({ [PREFIX + value.url]: value });
+    if (Math.random() < 0.05) void prune();
   } catch {
     /* best-effort */
   }
 }
 
 export async function deleteRecord(key: string): Promise<void> {
+  const a = area();
+  if (!a) return;
   try {
-    const db = await openDb();
-    await new Promise<void>((resolve, reject) => {
-      const r = tx(db, "readwrite").delete(key);
-      r.onsuccess = () => resolve();
-      r.onerror = () => reject(r.error);
-    });
+    await a.remove(PREFIX + key);
   } catch {
     /* best-effort */
   }
 }
 
-export async function clearAll(): Promise<void> {
+async function memoryKeys(): Promise<Array<{ key: string; lastVisitAt: number }>> {
+  const a = area();
+  if (!a) return [];
+  const all = (await a.get(null)) as Record<string, unknown>;
+  return Object.keys(all)
+    .filter((k) => k.startsWith(PREFIX))
+    .map((key) => ({
+      key,
+      lastVisitAt: Number((all[key] as { lastVisitAt?: number } | undefined)?.lastVisitAt ?? 0)
+    }));
+}
+
+async function prune(): Promise<void> {
+  const a = area();
+  if (!a) return;
   try {
-    const db = await openDb();
-    await new Promise<void>((resolve, reject) => {
-      const r = tx(db, "readwrite").clear();
-      r.onsuccess = () => resolve();
-      r.onerror = () => reject(r.error);
-    });
+    const keys = await memoryKeys();
+    if (keys.length <= MAX_RECORDS) return;
+    keys.sort((x, y) => x.lastVisitAt - y.lastVisitAt);
+    await a.remove(keys.slice(0, keys.length - MAX_RECORDS).map((k) => k.key));
+  } catch {
+    /* best-effort */
+  }
+}
+
+export async function countRecords(): Promise<number> {
+  try {
+    return (await memoryKeys()).length;
+  } catch {
+    return 0;
+  }
+}
+
+export async function clearAll(): Promise<void> {
+  const a = area();
+  if (!a) return;
+  try {
+    const keys = await memoryKeys();
+    if (keys.length) await a.remove(keys.map((k) => k.key));
   } catch {
     /* best-effort */
   }

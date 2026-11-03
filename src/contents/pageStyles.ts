@@ -66,7 +66,6 @@ function staticBaseStyles(): string {
       color: inherit;
       transition: font-weight 200ms var(--bionic-redr-ease-soft);
     }
-    @media (prefers-color-scheme: dark) { .bionic-redr-em { font-weight: 600; } }
 
     [data-bionic-redr-sentence] {
       transition-property: opacity, filter, text-decoration-color;
@@ -98,29 +97,29 @@ function staticBaseStyles(): string {
 
     html[data-bionic-redr-radar="subtle"] [data-radar-important] {
       text-decoration: underline;
-      text-decoration-color: rgba(107, 124, 255, 0.42);
+      text-decoration-color: rgba(13, 138, 166, 0.42);
       text-decoration-thickness: 1px;
       text-underline-offset: 4px;
     }
     html[data-bionic-redr-radar="medium"] [data-radar-important] {
       text-decoration: underline;
-      text-decoration-color: rgba(107, 124, 255, 0.7);
+      text-decoration-color: rgba(13, 138, 166, 0.7);
       text-decoration-thickness: 1.5px;
       text-underline-offset: 4px;
     }
     html[data-bionic-redr-radar="pronounced"] [data-radar-important] {
-      background: linear-gradient(transparent 62%, rgba(107, 124, 255, 0.16) 62%);
+      background: linear-gradient(transparent 62%, rgba(13, 138, 166, 0.16) 62%);
       border-radius: 2px;
     }
     @media (prefers-color-scheme: dark) {
       html[data-bionic-redr-radar="subtle"] [data-radar-important] {
-        text-decoration-color: rgba(141, 158, 255, 0.55);
+        text-decoration-color: rgba(56, 189, 220, 0.55);
       }
       html[data-bionic-redr-radar="medium"] [data-radar-important] {
-        text-decoration-color: rgba(141, 158, 255, 0.8);
+        text-decoration-color: rgba(56, 189, 220, 0.8);
       }
       html[data-bionic-redr-radar="pronounced"] [data-radar-important] {
-        background: linear-gradient(transparent 62%, rgba(141, 158, 255, 0.22) 62%);
+        background: linear-gradient(transparent 62%, rgba(56, 189, 220, 0.22) 62%);
       }
     }
 

@@ -41,6 +41,10 @@ function hasBlockAncestorWithin(el: HTMLElement, root: HTMLElement): boolean {
   return false;
 }
 
+function hasBlockAncestor(el: HTMLElement): boolean {
+  return Boolean(el.parentElement?.closest(BLOCK_SELECTOR));
+}
+
 function isAlreadyDiscovered(el: HTMLElement): boolean {
   return el.hasAttribute(BLOCK_ATTR);
 }
@@ -102,12 +106,14 @@ let blockCounter = 0;
 
 export function discoverAndWrapBlocks(root: HTMLElement): DiscoveredBlock[] {
   const elements = Array.from(root.querySelectorAll<HTMLElement>(BLOCK_SELECTOR));
+  // A dynamically inserted node may itself be a block (e.g. an appended <p>).
+  if (root.matches?.(BLOCK_SELECTOR) && !hasBlockAncestor(root)) elements.unshift(root);
   const result: DiscoveredBlock[] = [];
 
   for (const element of elements) {
     if (isAlreadyDiscovered(element)) continue;
     if (shouldSkipElement(element)) continue;
-    if (hasBlockAncestorWithin(element, root)) continue;
+    if (element !== root && hasBlockAncestorWithin(element, root)) continue;
 
     const blockId = `b${blockCounter++}`;
     const { runs, text } = collectRuns(element);

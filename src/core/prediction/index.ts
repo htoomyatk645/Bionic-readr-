@@ -6,10 +6,7 @@ import { fatigueRisk } from "./risk_model/fatigue";
 import { pacingMismatchRisk } from "./risk_model/pacing";
 import { scoreConfidence } from "./confidence_scoring/confidence";
 import { forecastNextState, type ForecastedState } from "./state_forecasting/forecast";
-import {
-  composeOverlays,
-  predictiveOverlay
-} from "./overlay/composer";
+import { predictiveOverlay } from "./overlay/composer";
 import {
   createTrajectory,
   type SnapshotTrajectory

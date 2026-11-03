@@ -17,7 +17,7 @@ export const MODE_PRESETS: Record<ModeId, ModePreset> = {
     tagline: "Smooth rhythm, natural progression.",
     bionic: { enabled: true, intensity: "low", fixationStrength: 0.7 },
     typography: { fontScale: 1, lineHeight: 1.6, letterSpacing: 0, paragraphSpacing: 1 },
-    skimLayer: "key",
+    skimLayer: "full",
     radar: { enabled: true, intensity: "subtle" }
   },
   study: {
@@ -26,7 +26,7 @@ export const MODE_PRESETS: Record<ModeId, ModePreset> = {
     tagline: "Active retention, careful comprehension.",
     bionic: { enabled: true, intensity: "high", fixationStrength: 0.95 },
     typography: { fontScale: 1, lineHeight: 1.7, letterSpacing: 0, paragraphSpacing: 1 },
-    skimLayer: "headlines",
+    skimLayer: "full",
     radar: { enabled: true, intensity: "medium" }
   },
   deep: {

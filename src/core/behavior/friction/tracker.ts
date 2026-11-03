@@ -60,7 +60,7 @@ export class FrictionTracker {
     const now = Date.now();
     const out = new Map<string, FrictionEntry>();
     const high = new Set<string>();
-    for (const [id, e] of this.entries) {
+    for (const id of this.entries.keys()) {
       const decayed = this.decayedEntry(id, now);
       if (decayed.score < 0.05 && decayed.visits === 0) continue;
       out.set(id, {

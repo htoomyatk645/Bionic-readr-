@@ -5,6 +5,7 @@ import {
   copyFileSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
   rmSync
 } from "node:fs";
 import { resolve, dirname } from "node:path";
@@ -35,11 +36,33 @@ function compileTailwind() {
     `npx tailwindcss -i "${cssIn}" -o "${cssOut}" ${isWatch ? "" : "--minify"}`,
     { stdio: "inherit", cwd: root }
   );
-  return readFileSync(cssOut, "utf-8");
+  // The panel renders inside a shadow root, where `rem` still resolves against
+  // the *host page's* <html> font-size (often 10px or 62.5%). Pin everything
+  // to px so the UI looks identical on every site.
+  return remToPx(readFileSync(cssOut, "utf-8"));
 }
 
-function copyManifest() {
+function remToPx(css) {
+  return css.replace(/(-?\d*\.?\d+)rem\b/g, (_, n) => {
+    const px = Math.round(parseFloat(n) * 16 * 1000) / 1000;
+    return `${px}px`;
+  });
+}
+
+function copyStatic() {
   copyFileSync(resolve(root, "manifest.json"), resolve(outDir, "manifest.json"));
+
+  mkdirSync(resolve(outDir, "icons"), { recursive: true });
+  for (const f of readdirSync(resolve(root, "icons"))) {
+    if (f.endsWith(".png")) copyFileSync(resolve(root, "icons", f), resolve(outDir, "icons", f));
+  }
+
+  mkdirSync(resolve(outDir, "fonts"), { recursive: true });
+  const font = "inter-latin-wght-normal.woff2";
+  copyFileSync(
+    resolve(root, "node_modules/@fontsource-variable/inter/files", font),
+    resolve(outDir, "fonts", font)
+  );
 }
 
 async function bundleAll(cssText) {
@@ -77,7 +100,7 @@ async function buildOnce() {
   clean();
   const css = compileTailwind();
   await bundleAll(css);
-  copyManifest();
+  copyStatic();
   try {
     rmSync(resolve(outDir, ".tailwind.css"));
   } catch {}
@@ -109,7 +132,7 @@ async function watchMode() {
     }
   };
   chokidar.default
-    .watch(["src", "manifest.json", "tailwind.config.js", "postcss.config.js"], {
+    .watch(["src", "icons", "manifest.json", "tailwind.config.js", "postcss.config.js"], {
       ignoreInitial: true,
       cwd: root
     })

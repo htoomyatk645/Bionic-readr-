@@ -3,7 +3,12 @@ import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { computeWarmup, type WarmupSuggestion } from "~features/memory";
 import { getValue, onValueChanged } from "~core/storage";
-import { DEFAULT_SETTINGS, SETTINGS_KEY } from "~features/settings/defaults";
+import {
+  DEFAULT_SETTINGS,
+  SETTINGS_KEY,
+  isHostExcluded,
+  normalizeSettings
+} from "~features/settings/defaults";
 import type { ReaderSettings } from "~features/settings/types";
 
 const HOST_ID = "bionic-redr-warmup-host";
@@ -15,7 +20,7 @@ const CSS = `
     bottom: 18px;
     left: 18px;
     z-index: 2147483640;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+    font-family: "Bionic Redr Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
     max-width: 320px;
     pointer-events: none;
   }
@@ -49,8 +54,8 @@ const CSS = `
     transition: background 140ms ease, color 140ms ease;
     font-family: inherit;
   }
-  .warmup-btn-primary { background: #1DA7C6; color: white; }
-  .warmup-btn-primary:hover { background: #1a8aa5; }
+  .warmup-btn-primary { background: #0d8aa6; color: white; }
+  .warmup-btn-primary:hover { background: #0b7690; }
   .warmup-btn-ghost { background: transparent; color: #6c6c76; }
   .warmup-btn-ghost:hover { color: #36363d; }
   @media (prefers-color-scheme: dark) {
@@ -74,10 +79,13 @@ function Warmup() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const settings = await getValue<ReaderSettings>(SETTINGS_KEY, DEFAULT_SETTINGS);
-      const memory = settings.memory ?? DEFAULT_SETTINGS.memory;
+      const settings = normalizeSettings(
+        await getValue<ReaderSettings>(SETTINGS_KEY, DEFAULT_SETTINGS)
+      );
+      const memory = settings.memory;
       setEnabled(Boolean(memory.enabled && memory.showWarmup));
       if (!memory.enabled || !memory.showWarmup) return;
+      if (isHostExcluded(settings, window.location.hostname)) return;
       if (window.sessionStorage.getItem(SHOWN_FLAG) === "1") return;
       const s = await computeWarmup();
       if (cancelled || !s) return;
@@ -87,8 +95,11 @@ function Warmup() {
     })();
 
     const unsub = onValueChanged<ReaderSettings>(SETTINGS_KEY, (next) => {
-      const memory = next?.memory ?? DEFAULT_SETTINGS.memory;
-      setEnabled(Boolean(memory.enabled && memory.showWarmup));
+      const n = normalizeSettings(next);
+      setEnabled(
+        Boolean(n.memory.enabled && n.memory.showWarmup) &&
+          !isHostExcluded(n, window.location.hostname)
+      );
     });
 
     return () => {
@@ -150,7 +161,7 @@ function mount() {
 
   const shadow = host.attachShadow({ mode: "open" });
   const style = document.createElement("style");
-  style.textContent = CSS;
+  style.textContent = ":host{all:initial;}" + CSS;
   shadow.appendChild(style);
 
   const mountPoint = document.createElement("div");

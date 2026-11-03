@@ -80,7 +80,7 @@ export async function createLearningEngine(): Promise<LearningEngineHandle> {
   let trajectory: TrajectoryRecord = await loadTrajectory();
   let patterns: PatternSummary = detectPatterns(trajectory.recent);
 
-  const session: SessionAccumulator = createAccumulator();
+  let session: SessionAccumulator = createAccumulator();
   const proxies: ProxyAccumulator = createProxyAccumulator();
   let proxiesSummary: EmotionalProxies = summarize(proxies);
   let lastSnapshot: BehaviorSnapshot | null = null;
@@ -121,6 +121,9 @@ export async function createLearningEngine(): Promise<LearningEngineHandle> {
   const finalizeSession = () => {
     const sessionDigest = digest(session);
     if (!sessionDigest || sessionDigest.durationMs < SESSION_END_MIN_MS) return;
+    // Start a fresh accumulator so a later flush/stop (e.g. pagehide followed
+    // by a bfcache restore) never integrates the same session twice.
+    session = createAccumulator();
     const recent = trajectory.recent.slice();
     cognitive = integrateSessionDigest(cognitive, sessionDigest, recent);
     recent.push(sessionDigest);
@@ -129,6 +132,22 @@ export async function createLearningEngine(): Promise<LearningEngineHandle> {
     patterns = detectPatterns(recent);
     dirtyCognitive = true;
     dirtyTrajectory = true;
+  };
+
+  const flush = async (): Promise<void> => {
+    finalizeSession();
+    if (persistTimer !== null) {
+      window.clearTimeout(persistTimer);
+      persistTimer = null;
+    }
+    await Promise.all([
+      dirtyCognitive ? saveCognitive(cognitive) : Promise.resolve(),
+      dirtyEmotional ? saveEmotional(emotional) : Promise.resolve(),
+      dirtyTrajectory ? saveTrajectory(trajectory) : Promise.resolve()
+    ]);
+    dirtyCognitive = false;
+    dirtyEmotional = false;
+    dirtyTrajectory = false;
   };
 
   return {
@@ -179,25 +198,10 @@ export async function createLearningEngine(): Promise<LearningEngineHandle> {
       };
     },
 
-    async flush() {
-      finalizeSession();
-      if (persistTimer !== null) {
-        window.clearTimeout(persistTimer);
-        persistTimer = null;
-      }
-      await Promise.all([
-        dirtyCognitive ? saveCognitive(cognitive) : Promise.resolve(),
-        dirtyEmotional ? saveEmotional(emotional) : Promise.resolve(),
-        dirtyTrajectory ? saveTrajectory(trajectory) : Promise.resolve()
-      ]);
-      dirtyCognitive = false;
-      dirtyEmotional = false;
-      dirtyTrajectory = false;
-    },
+    flush,
 
-    async stop() {
-      finalizeSession();
-      await this.flush();
+    stop() {
+      return flush();
     }
   };
 }

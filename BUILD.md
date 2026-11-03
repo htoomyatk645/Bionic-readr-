@@ -26,3 +26,14 @@ npm run build
 ```
 
 Upload that zip in the Chrome Web Store developer dashboard.
+
+## Notes
+
+- The panel opens with the toolbar icon or **Ctrl/⌘+Shift+B**. On tabs that were
+  open before the extension was installed/updated, clicking the icon injects the
+  content scripts on demand.
+- The panel UI is bundled (Inter variable font ships in `build/fonts/`); no
+  third-party requests are made from host pages.
+- Reading-position memory is stored in `chrome.storage.local`, never in the
+  host page's IndexedDB. It can be cleared from the panel (Continuity → Clear history).
+- Toolbar icons live in `icons/` (`icon.svg` is the source).
