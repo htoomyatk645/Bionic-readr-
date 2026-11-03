@@ -3,7 +3,8 @@
 ## 1. Create the upload package
 
 ```bash
-npm install && npm run package
+npm install
+npm run package
 ```
 
 This builds the extension and creates `release/bionic-redr-<version>.zip`. The zip holds the *contents* of `build/` with `manifest.json` at the top level, which is what the store expects.

@@ -48,15 +48,25 @@ git clone https://github.com/htoomyatk645/Bionic-readr-.git
 ```
 
 ```bash
-cd Bionic-readr- && npm install && npm run build
+cd Bionic-readr-
 ```
+
+```bash
+npm install
+```
+
+```bash
+npm run build
+```
+
+> On Windows PowerShell 5.1, run each command on its own line (`&&` isn't supported there).
 
 1. Open `chrome://extensions` in Chrome.
 2. Turn on **Developer mode** (top right).
 3. Click **Load unpacked** and select the `build/` folder.
 4. Pin Bionic Redr from the puzzle-piece menu and open any article.
 
-To update later, run `git pull && npm run build`, then click the reload icon on the Bionic Redr card in `chrome://extensions`.
+To update later, run `git pull` and then `npm run build`, then click the reload icon on the Bionic Redr card in `chrome://extensions`.
 
 ### Publishing to the Chrome Web Store
 
