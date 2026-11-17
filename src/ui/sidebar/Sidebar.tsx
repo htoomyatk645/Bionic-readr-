@@ -3,16 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import { useSettings } from "~features/settings/store";
 import { isHostExcluded } from "~features/settings/defaults";
 import type { Theme } from "~features/settings/types";
-import { CloseIcon } from "~ui/components/Icons";
-import { Preview } from "~ui/components/Preview";
+import { CloseIcon, ResetIcon } from "~ui/components/Icons";
 import { Switch } from "~ui/components/Switch";
-import { AdaptiveGroup } from "./sections/AdaptiveGroup";
-import { AppearanceGroup } from "./sections/AppearanceGroup";
-import { FocusGroup } from "./sections/FocusGroup";
-import { MemoryGroup } from "./sections/MemoryGroup";
-import { ModePicker } from "./sections/ModePicker";
-import { ReadingGroup } from "./sections/ReadingGroup";
-import { TypographyGroup } from "./sections/TypographyGroup";
+import { FineTune } from "./sections/FineTune";
+import { ModeTiles } from "./sections/ModeTiles";
+import { ReaderCard } from "./sections/ReaderCard";
 
 const PANEL_WIDTH = 400;
 const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
@@ -48,8 +43,9 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const hydrate = useSettings((s) => s.hydrate);
   const hydrated = useSettings((s) => s.hydrated);
   const settings = useSettings((s) => s.settings);
-  const effective = useSettings((s) => s.effective);
   const toggleHost = useSettings((s) => s.toggleHostExcluded);
+  const resetActiveMode = useSettings((s) => s.resetActiveMode);
+  const customized = Object.keys(settings.modes.customizations[settings.modes.current] ?? {}).length > 0;
   const theme = useResolvedTheme(settings.theme);
   const reduceMotion = useReducedMotion();
   const panelRef = useRef<HTMLElement>(null);
@@ -95,88 +91,84 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           className={`br-root br-theme-${theme} pointer-events-auto absolute right-0 top-0 flex h-screen flex-col border-l border-line bg-bg shadow-panel outline-none`}
           style={{ width: `min(${PANEL_WIDTH}px, 100vw)` }}
         >
-          <header className="flex shrink-0 items-center justify-between gap-3 px-4 pb-3 pt-4">
-            <div className="flex items-center gap-2.5">
-              <svg aria-hidden width="32" height="32" viewBox="0 0 128 128" className="shrink-0">
-                <rect width="128" height="128" rx="28" fill="rgb(var(--br-accent))" />
-                <g fill="rgb(var(--br-accent-fg))">
-                  <rect x="24" y="35" width="32" height="13" rx="6.5" />
-                  <rect x="62" y="38.5" width="42" height="6" rx="3" fillOpacity="0.55" />
-                  <rect x="24" y="57.5" width="22" height="13" rx="6.5" />
-                  <rect x="52" y="61" width="52" height="6" rx="3" fillOpacity="0.55" />
-                  <rect x="24" y="80" width="40" height="13" rx="6.5" />
-                  <rect x="70" y="83.5" width="22" height="6" rx="3" fillOpacity="0.55" />
-                </g>
-              </svg>
-              <div>
-                <div className="text-[14px] font-semibold leading-tight text-fg">
-                  <b>Bio</b>nic <b>Re</b>dr
-                </div>
-                <div className="text-[12px] leading-tight text-fg-subtle">Reading assistant</div>
-              </div>
+          <header className="flex shrink-0 items-center gap-3 px-4 pb-2 pt-4">
+            <svg aria-hidden width="28" height="28" viewBox="0 0 128 128" className="shrink-0">
+              <rect width="128" height="128" rx="30" fill="rgb(var(--br-accent))" />
+              <g fill="rgb(var(--br-accent-fg))">
+                <rect x="24" y="35" width="32" height="13" rx="6.5" />
+                <rect x="62" y="38.5" width="42" height="6" rx="3" fillOpacity="0.55" />
+                <rect x="24" y="57.5" width="22" height="13" rx="6.5" />
+                <rect x="52" y="61" width="52" height="6" rx="3" fillOpacity="0.55" />
+                <rect x="24" y="80" width="40" height="13" rx="6.5" />
+                <rect x="70" y="83.5" width="22" height="6" rx="3" fillOpacity="0.55" />
+              </g>
+            </svg>
+            <div className="min-w-0 flex-1 text-[14px] leading-tight text-fg">
+              <b className="font-bold">Bio</b>nic <b className="font-bold">Re</b>dr
             </div>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close panel"
-              className="grid h-8 w-8 place-items-center rounded-[8px] text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
+              className="-mr-1 grid h-8 w-8 place-items-center rounded-full text-fg-muted transition-colors hover:bg-surface-2 hover:text-fg"
             >
               <CloseIcon />
             </button>
           </header>
 
-          <div className="shrink-0 px-4 pb-3">
-            <div
-              className={
-                "flex items-center justify-between gap-3 rounded-[12px] border px-3.5 py-3 transition-colors " +
-                (excluded ? "border-line bg-surface-2" : "border-accent/40 bg-accent-soft")
-              }
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 text-[13px] font-semibold text-fg">
-                  <span
-                    aria-hidden
-                    className={"h-2 w-2 shrink-0 rounded-full " + (excluded ? "bg-fg-subtle" : "bg-accent")}
-                  />
-                  {excluded ? "Paused on this site" : "Active on this site"}
-                </div>
-                <div className="mt-0.5 truncate text-[12px] text-fg-muted" title={host}>
-                  {host || "This page"}
-                  {pausedVia && pausedVia !== host ? ` · via ${pausedVia}` : ""}
-                </div>
-              </div>
-              <Switch
-                label={excluded ? `Enable on ${host}` : `Pause on ${host}`}
-                checked={!excluded}
-                disabled={!host || !hydrated}
-                onChange={() => void toggleHost(pausedVia ?? host)}
-              />
+          <div className="br-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-2">
+            <div className={"space-y-6 transition-opacity " + (hydrated ? "opacity-100" : "opacity-0")}>
+              {/* Site switch: the one decision that matters most, worded as a state. */}
+              <label className="flex cursor-pointer items-center justify-between gap-3 rounded-[14px] bg-surface-2 px-3.5 py-2.5">
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2 text-[13px] font-medium text-fg">
+                    <span
+                      aria-hidden
+                      className={
+                        "h-2 w-2 shrink-0 rounded-full transition-colors " +
+                        (excluded ? "bg-fg-subtle" : "bg-accent shadow-[0_0_0_3px_rgb(var(--br-accent)/0.18)]")
+                      }
+                    />
+                    {excluded ? "Paused here" : "Reading aid on"}
+                  </span>
+                  <span className="mt-0.5 block truncate pl-4 text-[12px] text-fg-subtle" title={host}>
+                    {host || "This page"}
+                    {pausedVia && pausedVia !== host ? ` · via ${pausedVia}` : ""}
+                  </span>
+                </span>
+                <Switch
+                  label={excluded ? `Enable on ${host}` : `Pause on ${host}`}
+                  checked={!excluded}
+                  disabled={!host || !hydrated}
+                  onChange={() => void toggleHost(pausedVia ?? host)}
+                />
+              </label>
+
+              <ReaderCard paused={excluded} />
+              <ModeTiles />
+              <FineTune />
             </div>
           </div>
 
-          <div className="br-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6">
-            <div
-              className={"space-y-5 transition-opacity " + (hydrated ? "opacity-100" : "opacity-0")}
-            >
-              <ModePicker />
-              <Preview bionic={effective.bionic} typography={effective.typography} />
-              <ReadingGroup />
-              <FocusGroup />
-              <TypographyGroup />
-              <AdaptiveGroup />
-              <MemoryGroup />
-              <AppearanceGroup />
-            </div>
-          </div>
-
-          <footer className="flex shrink-0 items-center justify-between border-t border-line px-4 py-2.5 text-[12px] text-fg-subtle">
+          <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-line px-4 py-2.5 text-[12px] text-fg-subtle">
             <span>
               <kbd className="rounded-[5px] border border-line bg-surface px-1.5 py-[1px] font-sans text-[11px] text-fg-muted">
                 {IS_MAC ? "⌘⇧B" : "Ctrl+Shift+B"}
               </kbd>{" "}
-              toggles this panel
+              to toggle
             </span>
-            <span className="tabular-nums">v{extensionVersion()}</span>
+            <span className="flex items-center gap-3">
+              {customized && (
+                <button
+                  type="button"
+                  onClick={() => void resetActiveMode()}
+                  className="inline-flex items-center gap-1 rounded-[6px] px-1 text-fg-muted hover:text-fg"
+                >
+                  <ResetIcon /> Reset mode
+                </button>
+              )}
+              <span className="tabular-nums">v{extensionVersion()}</span>
+            </span>
           </footer>
         </motion.aside>
       )}

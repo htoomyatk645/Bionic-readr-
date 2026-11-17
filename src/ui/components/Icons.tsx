@@ -65,3 +65,33 @@ export const ResetIcon = (p: P) => (
     <path d="M3 3v5h5" />
   </svg>
 );
+export const ChevronIcon = (p: P) => (
+  <svg {...base} width={14} height={14} strokeWidth={2} {...p}>
+    <path d="M9 6l6 6-6 6" />
+  </svg>
+);
+export const RadarIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M4 7h11M4 12h16M4 17h8" />
+    <path d="M4 20h16" strokeOpacity="0.45" />
+  </svg>
+);
+export const SpacingIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M9 5h11M9 12h11M9 19h11" />
+    <path d="M4 4v6M4 14v6M2.5 6.5L4 4l1.5 2.5M2.5 17.5L4 20l1.5-2.5" />
+  </svg>
+);
+export const SparkIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
+    <path d="M19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z" />
+  </svg>
+);
+export const PaletteIcon = (p: P) => (
+  <svg {...base} {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 3.5v17" />
+    <path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none" />
+  </svg>
+);
