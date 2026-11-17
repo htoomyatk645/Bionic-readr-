@@ -18,7 +18,7 @@ export function Preview({ bionic, typography, dimmed }: PreviewProps) {
     <p
       aria-label="Preview of your reading settings"
       className={
-        "br-sample text-[17px] text-fg-muted transition-[line-height,letter-spacing,opacity] duration-300 " +
+        "br-sample text-[17.5px] text-fg-muted transition-[line-height,letter-spacing,opacity] duration-300 " +
         (dimmed ? "opacity-50" : "")
       }
       style={{

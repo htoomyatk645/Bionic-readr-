@@ -1,13 +1,14 @@
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSettings } from "~features/settings/store";
 import { isHostExcluded } from "~features/settings/defaults";
 import type { Theme } from "~features/settings/types";
 import { CloseIcon } from "~ui/components/Icons";
 import { Preview } from "~ui/components/Preview";
-import { Adjust } from "./sections/Adjust";
-import { Anchors } from "./sections/Anchors";
-import { Modes } from "./sections/Modes";
+import { AnchorDial } from "./sections/AnchorDial";
+import { ModePills } from "./sections/ModePills";
+import { MoreSheet } from "./sections/MoreSheet";
+import { ShowControls } from "./sections/ShowControls";
 
 const PANEL_WIDTH = 400;
 const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
@@ -48,6 +49,11 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   const theme = useResolvedTheme(settings.theme);
   const reduceMotion = useReducedMotion();
   const panelRef = useRef<HTMLElement>(null);
+  const [sheet, setSheet] = useState(false);
+  const closeSheet = useCallback(() => {
+    setSheet(false);
+    panelRef.current?.focus({ preventScroll: true });
+  }, []);
 
   const host = window.location.hostname;
   const excluded = host ? isHostExcluded(settings, host) : false;
@@ -59,7 +65,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   }, [hydrate]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setSheet(false);
+      return;
+    }
     // Move focus into the panel (not onto a control) so keyboard users land
     // inside it without a stray focus ring on the close button.
     panelRef.current?.focus({ preventScroll: true });
@@ -87,63 +96,67 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
           transition={transition}
-          className={`br-root br-theme-${theme} pointer-events-auto absolute right-0 top-0 flex h-screen flex-col border-l border-line bg-bg shadow-panel outline-none`}
+          className={`br-root br-theme-${theme} pointer-events-auto absolute right-0 top-0 flex h-screen flex-col overflow-hidden bg-bg shadow-panel outline-none`}
           style={{ width: `min(${PANEL_WIDTH}px, 100vw)` }}
         >
-          <header className="flex shrink-0 items-start justify-between gap-3 px-6 pb-4 pt-5">
+          <header className="flex shrink-0 items-start justify-between gap-3 px-6 pb-2 pt-5">
             <div className="min-w-0">
-              <div className="br-serif text-[22px] leading-none tracking-[-0.01em] text-fg">
-                <b className="font-bold">Bio</b>nic <b className="font-bold">Re</b>dr
-              </div>
-              {/* Status as a sentence; the state word is itself the switch. */}
-              <p className="mt-2 text-[13px] leading-snug text-fg-muted">
-                Reading aid is{" "}
+              <h1 className="text-[34px] font-bold leading-[1.1] tracking-[-0.03em] text-fg">Reading</h1>
+              <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[14px] text-fg-muted">
+                <span
+                  aria-hidden
+                  className={"h-2 w-2 shrink-0 rounded-full transition-colors " + (excluded ? "bg-fg-subtle" : "bg-green")}
+                />
+                <span className="truncate" title={host}>
+                  {excluded ? "Paused on" : "On for"} {host || "this page"}
+                  {pausedVia && pausedVia !== host ? ` (via ${pausedVia})` : ""}
+                </span>
+                <span aria-hidden>·</span>
                 <button
                   type="button"
-                  role="switch"
-                  aria-checked={!excluded}
-                  aria-label={excluded ? `Enable on ${host}` : `Pause on ${host}`}
                   disabled={!host || !hydrated}
                   onClick={() => void toggleHost(pausedVia ?? host)}
-                  className={
-                    "rounded-[2px] font-semibold transition-colors disabled:cursor-not-allowed " +
-                    (excluded ? "text-fg-subtle underline decoration-dotted underline-offset-2" : "br-mark text-fg")
-                  }
+                  className="shrink-0 font-medium text-accent hover:opacity-80 disabled:opacity-40"
                 >
-                  {excluded ? "paused" : "on"}
-                </button>{" "}
-                for <span className="text-fg" title={host}>{host || "this page"}</span>
-                {pausedVia && pausedVia !== host ? ` (via ${pausedVia})` : ""}.
-              </p>
+                  {excluded ? "Resume" : "Pause"}
+                </button>
+              </div>
             </div>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close panel"
-              className="-mr-2 -mt-1 grid h-8 w-8 place-items-center text-fg-subtle transition-colors hover:text-fg"
+              className="mt-1 grid h-8 w-8 shrink-0 place-items-center rounded-full bg-surface-2 text-fg-muted transition-colors hover:text-fg"
             >
-              <CloseIcon />
+              <CloseIcon width={13} height={13} strokeWidth={2.4} />
             </button>
           </header>
 
-          <div className="br-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-8">
-            <div className={"space-y-6 transition-opacity " + (hydrated ? "opacity-100" : "opacity-0")}>
-              <div className="border-l-2 border-fg pl-4">
+          <div className="br-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 pb-4 pt-3">
+            <div className={"space-y-7 transition-opacity " + (hydrated ? "opacity-100" : "opacity-0")}>
+              <div className="rounded-[22px] bg-surface-2 p-5">
                 <Preview bionic={effective.bionic} typography={effective.typography} dimmed={excluded} />
               </div>
-              <Anchors />
-              <Modes />
-              <Adjust />
+              <AnchorDial />
+              <ModePills />
+              <ShowControls />
             </div>
           </div>
 
-          <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-line px-6 py-3 text-[11px] uppercase tracking-[0.12em] text-fg-subtle">
-            <span>
-              <kbd className="font-sans normal-case tracking-normal text-fg-muted">{IS_MAC ? "⌘⇧B" : "Ctrl+Shift+B"}</kbd>{" "}
-              opens &amp; closes
-            </span>
-            <span className="normal-case tabular-nums">v{extensionVersion()}</span>
+          <footer className="shrink-0 space-y-2.5 px-6 pb-5 pt-3">
+            <button
+              type="button"
+              onClick={() => setSheet(true)}
+              className="h-[50px] w-full rounded-full bg-accent text-[16px] font-semibold text-accent-fg transition-opacity hover:opacity-90 active:opacity-80"
+            >
+              More Settings
+            </button>
+            <p className="text-center text-[12px] text-fg-muted">
+              {IS_MAC ? "⌘⇧B" : "Ctrl+Shift+B"} opens and closes · v{extensionVersion()}
+            </p>
           </footer>
+
+          <AnimatePresence>{sheet && <MoreSheet key="sheet" onClose={closeSheet} />}</AnimatePresence>
         </motion.aside>
       )}
     </AnimatePresence>

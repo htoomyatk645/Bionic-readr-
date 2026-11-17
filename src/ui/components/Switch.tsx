@@ -6,7 +6,7 @@ interface SwitchProps {
   disabled?: boolean;
 }
 
-/** A word that states the setting: "On" (marked) or "Off". */
+/** iOS-style switch. */
 export function Switch({ checked, onChange, label, id, disabled }: SwitchProps) {
   return (
     <button
@@ -18,11 +18,17 @@ export function Switch({ checked, onChange, label, id, disabled }: SwitchProps) 
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={
-        "min-w-[34px] rounded-[2px] py-0.5 text-right text-[13.5px] transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-40 " +
-        (checked ? "br-mark font-semibold text-fg" : "text-fg-subtle hover:text-fg")
+        "relative inline-flex h-[31px] w-[51px] shrink-0 items-center rounded-full transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-40 " +
+        (checked ? "bg-green" : "bg-[var(--br-track)]")
       }
     >
-      {checked ? "On" : "Off"}
+      <span
+        aria-hidden
+        className={
+          "inline-block h-[27px] w-[27px] rounded-full bg-white shadow-[0_3px_8px_rgba(0,0,0,0.15),0_1px_1px_rgba(0,0,0,0.12)] transition-transform duration-200 ease-out " +
+          (checked ? "translate-x-[22px]" : "translate-x-[2px]")
+        }
+      />
     </button>
   );
 }
