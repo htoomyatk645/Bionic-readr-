@@ -43,6 +43,8 @@ export interface AdaptiveOverlay {
 export interface AppliedAdaptation {
   bionicFixationStrength: number;
   bionicIntensity: Intensity;
+  /** Multiplier on the page's own text size; never adapted, only user-set. */
+  fontScale: number;
   lineHeight: number;
   letterSpacing: number;
   paragraphSpacing: number;

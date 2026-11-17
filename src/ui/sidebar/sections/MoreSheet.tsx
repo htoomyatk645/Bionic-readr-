@@ -8,6 +8,7 @@ import { Segmented, type SegmentedOption } from "~ui/components/Segmented";
 import { Slider } from "~ui/components/Slider";
 import { Switch } from "~ui/components/Switch";
 import { Group, Row } from "./Grouped";
+import { TextSize } from "./TextSize";
 
 const RADAR: SegmentedOption<RadarIntensity>[] = [
   { value: "subtle", label: "Subtle" },
@@ -109,6 +110,7 @@ export function MoreSheet({ onClose }: { onClose(): void }) {
 
         <div className="br-scroll min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-4 pb-8 pt-4">
           <Group header="Text" footer={`These apply to ${modeLabel} mode.`}>
+            <TextSize />
             {bionic.enabled && (
               <Slider
                 label="Anchor length"
