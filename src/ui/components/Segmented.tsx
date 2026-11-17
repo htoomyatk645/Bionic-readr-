@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useId, type ReactNode } from "react";
 
 export interface SegmentedOption<T extends string> {
   value: T;
@@ -13,8 +14,10 @@ interface SegmentedProps<T extends string> {
   label: string;
 }
 
-/** Pill segmented control (radio group semantics, arrow-key navigable). */
+/** iOS segmented control: a sliding thumb on a grey track. */
 export function Segmented<T extends string>({ value, options, onChange, label }: SegmentedProps<T>) {
+  const id = useId();
+  const reduceMotion = useReducedMotion();
   const index = options.findIndex((o) => o.value === value);
   const move = (delta: number) => {
     const next = options[(index + delta + options.length) % options.length];
@@ -24,7 +27,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
     <div
       role="radiogroup"
       aria-label={label}
-      className="grid w-full gap-0.5 rounded-[10px] bg-surface-2 p-[3px]"
+      className="grid w-full rounded-[9px] bg-[var(--br-track)] p-[2px]"
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
       onKeyDown={(e) => {
         if (e.key === "ArrowRight" || e.key === "ArrowDown") {
@@ -47,14 +50,22 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(opt.value)}
             className={
-              "flex h-[28px] items-center justify-center gap-1.5 rounded-[8px] px-2 text-[12px] font-medium transition-[background-color,color,box-shadow] duration-150 " +
-              (active
-                ? "bg-surface text-fg shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
-                : "text-fg-muted hover:text-fg")
+              "relative flex h-[30px] items-center justify-center gap-1.5 rounded-[7px] px-1.5 text-[13px] transition-colors " +
+              (active ? "font-semibold text-fg" : "font-medium text-fg-muted hover:text-fg")
             }
           >
-            {opt.icon}
-            <span className="truncate">{opt.label}</span>
+            {active && (
+              <motion.span
+                layoutId={id}
+                aria-hidden
+                className="absolute inset-0 rounded-[7px] bg-[var(--br-thumb)] shadow-thumb"
+                transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 38 }}
+              />
+            )}
+            <span className="relative flex items-center gap-1.5 truncate">
+              {opt.icon}
+              {opt.label}
+            </span>
           </button>
         );
       })}

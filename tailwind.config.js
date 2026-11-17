@@ -18,10 +18,13 @@ module.exports = {
         accent: token("accent"),
         "accent-fg": token("accent-fg"),
         "accent-soft": token("accent-soft"),
-        danger: token("danger")
+        danger: token("danger"),
+        grouped: token("grouped"),
+        green: token("green")
       },
       boxShadow: {
         card: "var(--br-shadow)",
+        thumb: "var(--br-shadow)",
         panel: "var(--br-panel-shadow)"
       }
     }

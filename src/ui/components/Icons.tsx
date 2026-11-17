@@ -65,3 +65,18 @@ export const ResetIcon = (p: P) => (
     <path d="M3 3v5h5" />
   </svg>
 );
+export const MinusIcon = (p: P) => (
+  <svg {...base} width={18} height={18} strokeWidth={2.6} {...p}>
+    <path d="M5 12h14" />
+  </svg>
+);
+export const PlusIcon = (p: P) => (
+  <svg {...base} width={18} height={18} strokeWidth={2.6} {...p}>
+    <path d="M5 12h14M12 5v14" />
+  </svg>
+);
+export const HighlightIcon = (p: P) => (
+  <svg {...base} width={15} height={15} strokeWidth={2.2} {...p}>
+    <path d="M4 8h12M4 13h16M4 18h9" />
+  </svg>
+);

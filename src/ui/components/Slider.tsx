@@ -15,12 +15,12 @@ export function Slider({ value, min, max, step, onChange, label, format }: Slide
   const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
   const shown = format ? format(value) : value.toFixed(2);
   return (
-    <div className="px-3.5 py-3 space-y-1.5">
+    <div className="px-4 pb-2 pt-3">
       <div className="flex items-baseline justify-between">
-        <label htmlFor={id} className="text-[13px] font-medium text-fg">
+        <label htmlFor={id} className="text-fg">
           {label}
         </label>
-        <span className="text-[12px] tabular-nums text-fg-subtle">{shown}</span>
+        <span className="tabular-nums text-fg-muted">{shown}</span>
       </div>
       <input
         id={id}
@@ -31,7 +31,7 @@ export function Slider({ value, min, max, step, onChange, label, format }: Slide
         value={value}
         aria-valuetext={shown}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="br-range"
+        className="br-range mt-1"
         style={{ ["--br-fill" as string]: `${pct}%` }}
       />
     </div>
