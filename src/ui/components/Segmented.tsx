@@ -13,7 +13,10 @@ interface SegmentedProps<T extends string> {
   label: string;
 }
 
-/** Pill segmented control (radio group semantics, arrow-key navigable). */
+/**
+ * Choices set as a line of words; the chosen one is marked with the
+ * highlighter. Radio-group semantics, arrow-key navigable.
+ */
 export function Segmented<T extends string>({ value, options, onChange, label }: SegmentedProps<T>) {
   const index = options.findIndex((o) => o.value === value);
   const move = (delta: number) => {
@@ -24,8 +27,7 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
     <div
       role="radiogroup"
       aria-label={label}
-      className="grid w-full gap-0.5 rounded-[10px] bg-surface-2 p-[3px]"
-      style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+      className="flex flex-wrap items-baseline gap-x-4 gap-y-1"
       onKeyDown={(e) => {
         if (e.key === "ArrowRight" || e.key === "ArrowDown") {
           e.preventDefault();
@@ -47,14 +49,12 @@ export function Segmented<T extends string>({ value, options, onChange, label }:
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(opt.value)}
             className={
-              "flex h-[28px] items-center justify-center gap-1.5 rounded-[8px] px-2 text-[12px] font-medium transition-[background-color,color,box-shadow] duration-150 " +
-              (active
-                ? "bg-surface text-fg shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
-                : "text-fg-muted hover:text-fg")
+              "inline-flex items-center gap-1 rounded-[2px] py-0.5 text-[13.5px] transition-colors duration-150 " +
+              (active ? "br-mark font-semibold text-fg" : "text-fg-subtle hover:text-fg")
             }
           >
             {opt.icon}
-            <span className="truncate">{opt.label}</span>
+            {opt.label}
           </button>
         );
       })}

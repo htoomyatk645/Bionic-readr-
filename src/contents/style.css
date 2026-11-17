@@ -5,45 +5,43 @@
 /* Design tokens. Everything in the panel reads from these, so light/dark is a
    single class swap on the panel root.
 
-   Palette rationale (reading-ergonomics, not decoration):
-   - Warm "paper & ink" neutrals instead of pure white/black. Very high
-     luminance contrast causes halation and faster visual fatigue, especially
-     for astigmatic readers; ~14:1 ink-on-paper keeps text crisp but calm.
-   - A single low-saturation sage accent. Saturated cyan/blue competes with
-     page content for pre-attentive attention; muted green is the least
-     arousing hue and reads as "on" without shouting.
-   - Dark mode is a warm charcoal, never #000, so bright glyphs don't bloom. */
+   Design language: editorial print. Ink on paper, hairline rules, serif
+   display type, and exactly one signal colour — a highlighter mark — for
+   "this is selected". With a single salient colour, selection pops out
+   pre-attentively (isolation effect) while everything else stays quiet. */
 .br-theme-light {
-  --br-bg: 246 244 239;
-  --br-surface: 255 254 251;
-  --br-surface-2: 238 235 228;
-  --br-line: 226 222 213;
-  --br-fg: 34 31 27;
-  --br-fg-muted: 99 93 85;
-  --br-fg-subtle: 145 138 127;
-  --br-accent: 46 120 102;
-  --br-accent-fg: 255 255 255;
-  --br-accent-soft: 226 239 233;
-  --br-danger: 186 64 52;
-  --br-shadow: 0 1px 2px rgba(60, 50, 30, 0.05), 0 2px 8px -4px rgba(60, 50, 30, 0.08);
-  --br-panel-shadow: -16px 0 48px rgba(40, 32, 20, 0.14), -2px 0 8px rgba(40, 32, 20, 0.06);
+  --br-bg: 250 249 245;
+  --br-surface: 255 255 252;
+  --br-surface-2: 240 238 231;
+  --br-line: 224 220 210;
+  --br-fg: 22 21 19;
+  --br-fg-muted: 92 88 80;
+  --br-fg-subtle: 148 142 130;
+  --br-accent: 22 21 19;
+  --br-accent-fg: 250 249 245;
+  --br-accent-soft: 240 238 231;
+  --br-danger: 178 52 40;
+  --br-mark: rgba(255, 212, 60, 0.85);
+  --br-shadow: none;
+  --br-panel-shadow: -1px 0 0 rgba(22, 21, 19, 0.08), -24px 0 60px rgba(40, 32, 20, 0.12);
   color-scheme: light;
 }
 
 .br-theme-dark {
-  --br-bg: 23 22 20;
-  --br-surface: 32 31 28;
-  --br-surface-2: 43 41 37;
-  --br-line: 53 51 46;
-  --br-fg: 236 232 223;
-  --br-fg-muted: 178 172 161;
-  --br-fg-subtle: 128 122 112;
-  --br-accent: 126 196 170;
-  --br-accent-fg: 16 38 31;
-  --br-accent-soft: 31 51 44;
+  --br-bg: 20 19 17;
+  --br-surface: 26 25 23;
+  --br-surface-2: 36 34 31;
+  --br-line: 50 48 44;
+  --br-fg: 238 234 225;
+  --br-fg-muted: 176 170 158;
+  --br-fg-subtle: 120 115 105;
+  --br-accent: 238 234 225;
+  --br-accent-fg: 20 19 17;
+  --br-accent-soft: 36 34 31;
   --br-danger: 232 120 104;
-  --br-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --br-panel-shadow: -24px 0 64px rgba(0, 0, 0, 0.45), -2px 0 10px rgba(0, 0, 0, 0.25);
+  --br-mark: rgba(232, 184, 52, 0.5);
+  --br-shadow: none;
+  --br-panel-shadow: -1px 0 0 rgba(255, 255, 255, 0.06), -24px 0 64px rgba(0, 0, 0, 0.5);
   color-scheme: dark;
 }
 
@@ -68,64 +66,70 @@
   scrollbar-color: rgb(var(--br-line)) transparent;
 }
 
-/* Range input: track filled up to the value via --br-fill. */
+/* Range input: a ruler. Hairline track with tick marks, ink fill up to the
+   value (--br-fill), and a slim vertical cursor for a thumb. */
 .br-range {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 20px;
+  height: 22px;
   background: transparent;
   cursor: pointer;
   margin: 0;
 }
 .br-range::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: 999px;
-  background: linear-gradient(
-    to right,
-    rgb(var(--br-accent)) 0,
-    rgb(var(--br-accent)) var(--br-fill, 50%),
-    rgb(var(--br-line)) var(--br-fill, 50%)
-  );
+  height: 9px;
+  background:
+    linear-gradient(rgb(var(--br-fg)), rgb(var(--br-fg))) 0 100% / var(--br-fill, 50%) 2px no-repeat,
+    linear-gradient(rgb(var(--br-line)), rgb(var(--br-line))) 0 100% / 100% 1px no-repeat,
+    repeating-linear-gradient(to right, rgb(var(--br-fg-subtle) / 0.55) 0 1px, transparent 1px 10%) 0 100% / 100% 6px no-repeat;
 }
 .br-range::-moz-range-track {
-  height: 4px;
-  border-radius: 999px;
+  height: 1px;
   background: rgb(var(--br-line));
 }
 .br-range::-moz-range-progress {
-  height: 4px;
-  border-radius: 999px;
-  background: rgb(var(--br-accent));
+  height: 2px;
+  background: rgb(var(--br-fg));
 }
 .br-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 3px;
+  height: 18px;
   margin-top: -6px;
-  border-radius: 999px;
-  background: #fff;
-  border: 1px solid rgba(40, 32, 20, 0.14);
-  box-shadow: 0 1px 3px rgba(40, 32, 20, 0.22);
+  border-radius: 2px;
+  background: rgb(var(--br-fg));
+  box-shadow: 0 0 0 3px rgb(var(--br-bg));
   transition: transform 120ms ease;
 }
 .br-range:active::-webkit-slider-thumb {
-  transform: scale(1.12);
+  transform: scaleY(1.2);
 }
 .br-range::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
-  border-radius: 999px;
-  background: #fff;
-  border: 1px solid rgba(20, 20, 25, 0.14);
-  box-shadow: 0 1px 3px rgba(20, 20, 25, 0.2);
+  width: 3px;
+  height: 18px;
+  border: 0;
+  border-radius: 2px;
+  background: rgb(var(--br-fg));
+  box-shadow: 0 0 0 3px rgb(var(--br-bg));
 }
 .br-range:focus-visible {
   outline: none;
 }
 .br-range:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px rgb(var(--br-accent) / 0.35);
+  box-shadow: 0 0 0 3px rgb(var(--br-bg)), 0 0 0 5px var(--br-mark);
+}
+
+/* The highlighter: a slightly uneven marker stroke behind the lower part of
+   the text, like a real pen swipe across a printed word. */
+.br-mark {
+  background-image: linear-gradient(100deg, transparent 0.15em, var(--br-mark) 0.25em, var(--br-mark) calc(100% - 0.3em), transparent calc(100% - 0.12em));
+  background-repeat: no-repeat;
+  background-size: 100% 0.62em;
+  background-position: 0 88%;
+  padding: 0 0.18em;
+  margin: 0 -0.18em;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -139,6 +143,7 @@
 
 /* Reading sample in the preview uses a text face closer to what pages render,
    so what you tune is what you'll see. */
+.br-serif,
 .br-sample {
   font-family: ui-serif, "Iowan Old Style", "Charter", Georgia, "Times New Roman", serif;
   font-feature-settings: normal;

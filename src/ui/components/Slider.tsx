@@ -8,7 +8,7 @@ interface SliderProps {
   onChange(next: number): void;
   label: string;
   format?(value: number): string;
-  /** Plain-language ends of the scale, e.g. ["Tighter", "Airier"]. */
+  /** Plain-language ends of the scale, e.g. ["Compact", "Airy"]. */
   ends?: [string, string];
 }
 
@@ -17,12 +17,12 @@ export function Slider({ value, min, max, step, onChange, label, format, ends }:
   const pct = Math.max(0, Math.min(100, ((value - min) / (max - min)) * 100));
   const shown = format ? format(value) : value.toFixed(2);
   return (
-    <div className="space-y-1">
+    <div>
       <div className="flex items-baseline justify-between">
-        <label htmlFor={id} className="text-[13px] font-medium text-fg">
+        <label htmlFor={id} className="text-[13.5px] text-fg">
           {label}
         </label>
-        <span className="text-[12px] tabular-nums text-fg-subtle">{shown}</span>
+        <span className="br-serif text-[14px] italic tabular-nums text-fg-muted">{shown}</span>
       </div>
       <input
         id={id}
@@ -33,11 +33,11 @@ export function Slider({ value, min, max, step, onChange, label, format, ends }:
         value={value}
         aria-valuetext={shown}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="br-range"
+        className="br-range mt-1"
         style={{ ["--br-fill" as string]: `${pct}%` }}
       />
       {ends && (
-        <div aria-hidden className="flex justify-between text-[11px] text-fg-subtle">
+        <div aria-hidden className="mt-0.5 flex justify-between text-[10.5px] uppercase tracking-[0.12em] text-fg-subtle">
           <span>{ends[0]}</span>
           <span>{ends[1]}</span>
         </div>
