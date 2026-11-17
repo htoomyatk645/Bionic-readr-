@@ -1,7 +1,7 @@
 {
   "name": "bionic-redr",
   "displayName": "Bionic Redr",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A Chrome extension that makes web pages easier to read: bionic word anchors, focus aids, typography and reading memory.",
   "author": "Bionic Redr",
   "private": true,

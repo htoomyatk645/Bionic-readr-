@@ -1,6 +1,6 @@
 # Privacy Policy
 
-_Last updated: November 3, 2026_
+_Last updated: November 17, 2026_
 
 Bionic Redr is a browser extension that changes how text looks on the pages you read. It is built to work entirely on your device.
 
@@ -9,7 +9,7 @@ Bionic Redr is a browser extension that changes how text looks on the pages you 
 All of the following is kept in Chrome's local extension storage (`chrome.storage.local`) on your computer:
 
 - **Settings:** your chosen mode, emphasis, typography, theme and the sites where you paused the extension.
-- **Reading positions:** for pages you read, the page address, title, scroll position and the first words of the paragraph you stopped at. This powers "Remember my place" and can be turned off or cleared in the panel (Continuity → Clear history).
+- **Reading positions:** for pages you read, the page address, title, scroll position and the first words of the paragraph you stopped at. This powers "Remember my place" and can be turned off or cleared in the panel (More Settings → Reading memory → Clear Reading History).
 - **Adaptive profile:** anonymous reading-rhythm statistics (such as scrolling pace) used to tune emphasis and spacing.
 
 ## What the extension does not do
@@ -26,7 +26,7 @@ All of the following is kept in Chrome's local extension storage (`chrome.storag
 
 ## Removing your data
 
-Clear reading history from the panel, or remove the extension from `chrome://extensions` to delete everything it stored.
+Clear reading history from the panel (More Settings → Reading memory), or remove the extension from `chrome://extensions` to delete everything it stored.
 
 ## Contact
 

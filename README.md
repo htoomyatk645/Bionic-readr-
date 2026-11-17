@@ -12,24 +12,24 @@
 <p align="center">
   <a href="https://github.com/htoomyatk645/Bionic-readr-/actions/workflows/ci.yml"><img src="https://github.com/htoomyatk645/Bionic-readr-/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
   <img src="https://img.shields.io/badge/Chrome-Manifest%20V3-0B7F99" alt="Manifest V3">
-  <img src="https://img.shields.io/badge/version-0.2.0-0B7F99" alt="Version 0.2.0">
+  <img src="https://img.shields.io/badge/version-0.3.0-0B7F99" alt="Version 0.3.0">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0B7F99" alt="MIT license"></a>
 </p>
 
 <p align="center">
-  <img src="docs/screenshot-light.png" width="49%" alt="Bionic Redr panel in light mode">
-  <img src="docs/screenshot-dark.png" width="49%" alt="Bionic Redr panel in dark mode">
+  <img src="docs/screenshot-light.png" width="300" alt="Bionic Redr panel in light mode">
+  <img src="docs/screenshot-dark.png" width="300" alt="Bionic Redr panel in dark mode">
 </p>
 
 ## Features
 
-- **Bionic emphasis.** Bolds the first letters of every word so your eye has a clear landing spot. Four intensities plus a fine-grained fixation slider.
+- **Word anchors.** Bolds the first letters of every word so your eye has a clear landing spot. Five steps from Off to Max, plus an anchor-length slider.
 - **Reading modes.** Focus, Flow, Study and Deep Read presets. Tweak any mode and it remembers your changes.
-- **Focus aids.** Sentence radar underlines the most important sentences. Skim layers dim everything except key points, or show only headlines.
-- **Typography.** Adjust line height, letter spacing and paragraph spacing on any page.
-- **Adaptive.** Learns your reading rhythm on your device and gently eases dense passages.
-- **Continuity.** Remembers where you stopped on each page and offers to resume.
-- **Per-site control.** Pause it on any site with one switch.
+- **Key points.** Show everything, fade all but the key sentences, or show just the outline. Highlights underline the sentences that carry the most meaning.
+- **Text size and spacing.** Text size from 85% to 150%, plus line, letter and paragraph spacing on any page.
+- **Smart reading.** Learns your reading rhythm on your device and gently eases dense passages.
+- **Reading memory.** Remembers where you stopped on each page and offers to resume.
+- **Per-site control.** Pause it on any site with one tap.
 - **Light and dark.** The panel follows your system theme, or you can choose one.
 
 Open the panel with the toolbar icon or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (<kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> on Mac).
