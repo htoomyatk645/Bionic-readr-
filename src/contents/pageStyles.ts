@@ -22,6 +22,7 @@ export function removePageStyles(): void {
   document.getElementById(STYLE_ID)?.remove();
   const root = document.documentElement;
   for (const v of [
+    "--bionic-redr-font-scale",
     "--bionic-redr-line-height",
     "--bionic-redr-paragraph-spacing",
     "--bionic-redr-letter-spacing",
@@ -33,6 +34,7 @@ export function removePageStyles(): void {
 
 export function updateAdaptiveVariables(applied: AppliedAdaptation): void {
   const root = document.documentElement;
+  root.style.setProperty("--bionic-redr-font-scale", String(applied.fontScale));
   root.style.setProperty("--bionic-redr-line-height", String(applied.lineHeight));
   root.style.setProperty(
     "--bionic-redr-paragraph-spacing",
@@ -150,6 +152,16 @@ function adaptiveStyles(): string {
     }
     [data-bionic-redr-block][data-block-kind="paragraph"] {
       margin-block-end: calc(var(--bionic-redr-paragraph-spacing, 1em));
+    }
+
+    /* Text size. zoom (not font-size) so each element keeps the site's own
+       relative sizes — code, links, small print — and auto-width blocks
+       still fit their column. Nested blocks must not compound the scale. */
+    [data-bionic-redr-block] {
+      zoom: var(--bionic-redr-font-scale, 1);
+    }
+    [data-bionic-redr-block] [data-bionic-redr-block] {
+      zoom: 1;
     }
   `;
 }

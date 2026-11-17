@@ -112,6 +112,7 @@ export function applyOverlay(
       clamp(overlay.typography.letterSpacingDelta, BOUNDS.letterSpacingDelta),
     { min: -0.01, max: 0.04 }
   );
+  const fontScale = clamp(base.typography.fontScale ?? 1, { min: 0.85, max: 1.5 });
   const skimLayer: SkimLayer = overlay.skim.forcedLayer ?? base.skimLayer;
   const radarIntensity = shiftRadar(base.radar.intensity, overlay.radar.intensityShift);
   const animationSpeedFactor = clamp(
@@ -122,6 +123,7 @@ export function applyOverlay(
   return {
     bionicFixationStrength: fixation,
     bionicIntensity: intensity,
+    fontScale,
     lineHeight,
     letterSpacing,
     paragraphSpacing,
